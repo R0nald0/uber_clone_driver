@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "1018555282254",
+    "project_id": "uber-642f2",
+    "storage_bucket": "uber-642f2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1018555282254:android:2ae12d2b333158a588a41f",
+        "android_client_info": {
+          "package_name": "com.example.uber.driver.uber_clone_driver"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1018555282254-mjl7kqq1ade78atb5vkujhn1ltgot49t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzOvVd3eIVgcoOzwLoePFbpnC6XXzkaCI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1018555282254-mjl7kqq1ade78atb5vkujhn1ltgot49t.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1018555282254:android:715a3d8ff00a42c788a41f",
+        "android_client_info": {
+          "package_name": "com.uber_clone.drive.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1018555282254-mjl7kqq1ade78atb5vkujhn1ltgot49t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzOvVd3eIVgcoOzwLoePFbpnC6XXzkaCI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1018555282254-mjl7kqq1ade78atb5vkujhn1ltgot49t.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
