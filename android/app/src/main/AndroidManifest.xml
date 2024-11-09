@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+   
     <application
         android:label="uber_clone_driver"
         android:name="${applicationName}"
@@ -33,7 +38,7 @@
             android:name="flutterEmbedding"
             android:value="2" />
           <meta-data android:name="com.google.android.geo.API_KEY"
-           android:value=""/>  
+           android:value="AIzaSyA4GHzjMqKZ7gmyYZLULCZ18KcFH38tiPY"/>  
                           
     </application>
     <!-- Required to query activities that can process text, see:

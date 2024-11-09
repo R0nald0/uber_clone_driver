@@ -75,7 +75,8 @@ void main() async {
     modules: [
       SplashScreenModule(),
       HomeModule(),
-      RegisterModule()
+      RegisterModule(),
+   
     ],
   ));
 }

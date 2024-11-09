@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_getit/flutter_getit.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:uber_clone_core/uber_clone_core.dart';
 import 'package:uber_clone_driver/app/module/auth/controller/authentication_controller.dart';
 import 'package:uber_clone_driver/app/module/home_module/home_controller.dart';
 import 'package:uber_clone_driver/app/module/home_module/home_page.dart';
 class TripPage extends StatefulWidget {
-  const TripPage({super.key});
+  
+  const TripPage({super.key}) ;
 
   @override
   State<TripPage> createState() => _TripPageState();
@@ -23,11 +25,13 @@ class _TripPageState extends State<TripPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { 
+ final requisicao  = ModalRoute.of(context)!.settings.arguments as Requisicao;
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text("Corrida em andamento"),
+        title:  Text("Corrida em andamento ${requisicao.passageiro.nome}" ),
       ),
       body: Container(
           padding: const EdgeInsets.all(2),

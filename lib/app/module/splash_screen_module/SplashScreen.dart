@@ -36,8 +36,8 @@ class SplashScreenState extends State<SplashScreen> with DialogLoader {
       }
     });
 
-   reaction<Usuario?>((_) => widget._authController.dataStringUser, (user) {
-      if (user == null || user.email.isEmpty)  {
+   reaction<String?>((_) => widget._authController.dataStringUser, (idUser) {
+      if (idUser == null || idUser.isEmpty)  {
          Navigator.of(context).pushNamedAndRemoveUntil(UberDriveConstants.LOGIN_PAGE_NAME,(route) => false,);
       } else {
          Navigator.of(context).pushNamedAndRemoveUntil(UberDriveConstants.HOME_PAGE_NAME,(route) => false,);

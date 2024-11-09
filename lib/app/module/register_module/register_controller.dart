@@ -37,7 +37,6 @@ Future<void> login(String email,String password)async{
       _isSuccessLogin = false;
       final isSuccessLogin = await _authService.register(
           name, email, password, UberCloneConstants.TIPO_USUARIO_MOTORISTA);
-
       _isSuccessLogin = isSuccessLogin;
     } on UserException catch (e) {
       _errorMessange = e.message;

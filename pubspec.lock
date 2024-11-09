@@ -396,7 +396,7 @@ packages:
     source: hosted
     version: "2.0.23"
   flutter_polyline_points:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_polyline_points
       sha256: "3a1c8c30abee9fb0fbe44c70d5d1cedb10ef28ec7ea285c669f02b3e183483aa"
@@ -430,7 +430,7 @@ packages:
     source: hosted
     version: "4.0.0"
   geocoding:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: geocoding
       sha256: d580c801cba9386b4fac5047c4c785a4e19554f46be42f4f5e5b7deacd088a66
@@ -462,7 +462,7 @@ packages:
     source: hosted
     version: "3.2.0"
   geolocator:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: geolocator
       sha256: "149876cc5207a0f5daf4fdd3bfcf0a0f27258b3fe95108fa084f527ad0568f1b"
@@ -621,7 +621,7 @@ packages:
     source: hosted
     version: "4.0.2"
   intl:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: intl
       sha256: d6f56758b7d3014a48af9701c085700aac781a92a87a62b1333b46d8879661cf

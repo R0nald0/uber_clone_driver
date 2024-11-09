@@ -30,16 +30,16 @@ mixin _$AuthenticationController on AuthenticationControllerBase, Store {
   late final _$_dataStringUserAtom = Atom(
       name: 'AuthenticationControllerBase._dataStringUser', context: context);
 
-  Usuario? get dataStringUser {
+  String? get dataStringUser {
     _$_dataStringUserAtom.reportRead();
     return super._dataStringUser;
   }
 
   @override
-  Usuario? get _dataStringUser => dataStringUser;
+  String? get _dataStringUser => dataStringUser;
 
   @override
-  set _dataStringUser(Usuario? value) {
+  set _dataStringUser(String? value) {
     _$_dataStringUserAtom.reportWrite(value, super._dataStringUser, () {
       super._dataStringUser = value;
     });

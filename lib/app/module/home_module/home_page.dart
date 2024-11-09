@@ -1,9 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mobx/mobx.dart';
 import 'package:uber_clone_core/uber_clone_core.dart';
+import 'package:uber_clone_driver/app/helper/uber_drive_constants.dart';
 import 'package:uber_clone_driver/app/module/auth/controller/authentication_controller.dart';
 import 'package:uber_clone_driver/app/module/home_module/home_controller.dart';
+
+part 'widgets/card_trip_item.dart';
 
 class HomePage extends StatefulWidget {
   final AuthenticationController _auth;
@@ -17,11 +24,28 @@ class HomePage extends StatefulWidget {
         _homeController = homeController;
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePage> createState()  => _HomePageState()  ;
 }
 
-List<String> listItens = ["Configurações", "Deslogar"];
-deslogarUsuario() {}
+
+
+class _HomePageState extends State<HomePage>  with DialogLoader {
+
+  var listReactions = <ReactionDisposer>[];
+
+ 
+  final CameraPosition _cameraPositionViagem =
+      const CameraPosition(target: LatLng(-13.001478, -38.499390), zoom: 11);
+
+  _onMapCreated(GoogleMapController googleMapController) {
+    widget._homeController.controler.complete(googleMapController);
+  }
+
+
+  List<String> listItens = ["Configurações", "Deslogar"];
+deslogarUsuario() async {
+  widget._auth.logout();
+}
 _escolhaItem(String escolha) {
   switch (escolha) {
     case "Configurações":
@@ -30,45 +54,72 @@ _escolhaItem(String escolha) {
       deslogarUsuario();
       break;
   }
-}
+}  
 
-class _HomePageState extends State<HomePage> {
-  late ReactionDisposer reactionDisposerUser;
-  late ReactionDisposer reactionDisposerRequisicao;
-
-  var listRequisicao = <Requisicao>[];
-
-
-  findAllTrisp() async {
-     widget._homeController.findTrips();
-  }
 
   initReactions() async {
-    /* reactionDisposerUser =
-        reaction<Usuario?>((_) => widget._auth.dataStringUser, (user) {
-      if (user != null) {
-        print(user.nome);
+     final idUser = widget._auth.dataStringUser;
+      if (idUser != null) {
+          showLoaderDialog();
+          await  widget._homeController.getUserData(idUser);
+          await  widget._homeController.findTrips();
+          hideLoader();
       } else {
-        print('Usuarion esta nulo');
+         callMessager();
+      }
+
+    final serviceEnableReaction =
+        reaction<bool>((_) => widget._homeController.isServiceEnable,
+            (isServiceEnable) {
+      if (!isServiceEnable) {
+        callSnackBar("Ativse sua localização");
       }
     });
 
-    reactionDisposerRequisicao =
-        reaction<List<Requisicao>?>((_) => widget._homeController.requisicoes, (requisicoes) {
-      if (requisicoes != null && requisicoes.isNotEmpty) {
-         listRequisicao = [...requisicoes];
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Nenhuma Viagem ") )
-        );
+    final locationPermissionReaction = reaction<LocationPermission?>( (_) => widget._homeController.locationPermission, (permission) {
+      if (permission == LocationPermission.denied) {
+        dialogLocationPermissionDenied(() {
+          widget._homeController.getPermissionLocation();
+        });
+  
+      } else if (permission == LocationPermission.deniedForever) {
+        dialogLocationPermissionDeniedForeve(() {
+          Geolocator.openAppSettings();
+        });
       }
-    }); */
+      
+    });     
+      listReactions.addAll([locationPermissionReaction,serviceEnableReaction]);
+  }
+
+  void callMessager() {
+  final  reactionDisposerMessage =
+        reaction<String?>((_) => widget._homeController.errorMessage, (messager) {
+         if (messager != null) {
+            callSnackBar(messager);
+         }
+    });
+
+    listReactions.add(reactionDisposerMessage);
   }
 
   @override
   void initState() {
-  
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback( (_){
+       
+       initReactions();
+    }); 
+    //TODO IMPLEMENTAR CICLO DE VIDA PARA VERIFICAR SE O USUARIO DEU A PERMISSAO AO VOLTAR PAR O APP
+  
+  }
+
+  @override
+  void dispose() {
+    for (var reactions in listReactions) {
+      reactions();
+    }
+    super.dispose();
   }
 
   @override
@@ -76,8 +127,14 @@ class _HomePageState extends State<HomePage> {
    
     return Scaffold(
       appBar: AppBar(title: const Text('Motorista'), actions: [
+        IconButton(
+                onPressed: () async {
+                  await widget._homeController.getPermissionLocation();
+                },
+                icon: const Icon(Icons.my_location)),
         PopupMenuButton<String>(
             onSelected: _escolhaItem,
+          
             itemBuilder: (context) => listItens.map((String item) {
                   return PopupMenuItem(
                     value: item,
@@ -85,69 +142,40 @@ class _HomePageState extends State<HomePage> {
                   );
                 }).toList())
       ]),
-      body: Padding(
-        padding: const EdgeInsets.all(2),
-        child: Observer(builder: (context) {
-          return ListView.builder(
-              itemCount: listRequisicao.length,
-              itemBuilder: (context, index) {
-                final requisicao = listRequisicao[index];
-                return Card(
-                  shadowColor: Colors.black,
-                  child: ListTile(
-                    title: Row(
-                      children: <Widget>[
-                        const Text("Passageiro :",
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                        Text(requisicao.passageiro.nome)
-                      ],
-                    ),
-                    subtitle: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Row(
-                          children: [
-                            const Text("Destino :",
-                                style: TextStyle(
-                                    fontSize: 15, fontWeight: FontWeight.bold)),
-                            Expanded(
-                              child: Text(
-                                requisicao.destino.nomeDestino,
-                                style: const TextStyle(fontSize: 15),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            )
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            const Text("Valor :",
-                                style: TextStyle(
-                                    fontSize: 15, fontWeight: FontWeight.bold)),
-                            Expanded(
-                              child: Text(
-                                'R\$${requisicao.valorCorrida}',
-                                style: const TextStyle(fontSize: 15),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            )
-                          ],
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      //controller.teste();
-                      Navigator.pushNamed(context, '/corrida');
-                    },
-                  ),
+      body: Column(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: Observer(builder: (context) {
+                return ListView.builder(
+                    itemCount: widget._homeController.requisicoes.length,
+                    itemBuilder: (context, index) {
+                      final requisicao = widget._homeController.requisicoes[index];
+                      return CardTripItem(requisicao: requisicao) ;
+                    });
+              }),
+            ),
+          ),
+
+          Observer(
+            builder: (context) {
+              return Expanded( 
+                flex: 1,
+                child: GoogleMap(
+                  initialCameraPosition: widget._homeController.cameraPosition ?? _cameraPositionViagem,
+                  myLocationEnabled: true,
+                  markers: widget._homeController.markers,
+                  onMapCreated: _onMapCreated,
+                  )
                 );
-              });
-        }),
+            }
+          )
+        ],
       ),
     );
   }
+
+
 }
