@@ -27,6 +27,24 @@ mixin _$HomeController on HomeControllerBase, Store {
     });
   }
 
+  late final _$_requisicaoActiveAtom =
+      Atom(name: 'HomeControllerBase._requisicaoActive', context: context);
+
+  Requisicao? get requisicaoActive {
+    _$_requisicaoActiveAtom.reportRead();
+    return super._requisicaoActive;
+  }
+
+  @override
+  Requisicao? get _requisicaoActive => requisicaoActive;
+
+  @override
+  set _requisicaoActive(Requisicao? value) {
+    _$_requisicaoActiveAtom.reportWrite(value, super._requisicaoActive, () {
+      super._requisicaoActive = value;
+    });
+  }
+
   late final _$_usuarioAtom =
       Atom(name: 'HomeControllerBase._usuario', context: context);
 
@@ -153,6 +171,24 @@ mixin _$HomeController on HomeControllerBase, Store {
     });
   }
 
+  late final _$_polynesRouterAtom =
+      Atom(name: 'HomeControllerBase._polynesRouter', context: context);
+
+  Set<Polyline> get polynesRouter {
+    _$_polynesRouterAtom.reportRead();
+    return super._polynesRouter;
+  }
+
+  @override
+  Set<Polyline> get _polynesRouter => polynesRouter;
+
+  @override
+  set _polynesRouter(Set<Polyline> value) {
+    _$_polynesRouterAtom.reportWrite(value, super._polynesRouter, () {
+      super._polynesRouter = value;
+    });
+  }
+
   late final _$getCameraUserLocationPositionAsyncAction = AsyncAction(
       'HomeControllerBase.getCameraUserLocationPosition',
       context: context);
@@ -202,6 +238,23 @@ mixin _$HomeController on HomeControllerBase, Store {
   @override
   Future<void> findTrips() {
     return _$findTripsAsyncAction.run(() => super.findTrips());
+  }
+
+  late final _$viewTripInfoAsyncAction =
+      AsyncAction('HomeControllerBase.viewTripInfo', context: context);
+
+  @override
+  Future<void> viewTripInfo(Requisicao requisicao) {
+    return _$viewTripInfoAsyncAction.run(() => super.viewTripInfo(requisicao));
+  }
+
+  late final _$showLocationsOnMapAsyncAction =
+      AsyncAction('HomeControllerBase.showLocationsOnMap', context: context);
+
+  @override
+  Future<void> showLocationsOnMap() {
+    return _$showLocationsOnMapAsyncAction
+        .run(() => super.showLocationsOnMap());
   }
 
   @override

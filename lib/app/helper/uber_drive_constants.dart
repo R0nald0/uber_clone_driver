@@ -17,5 +17,11 @@ class UberDriveConstants {
   static const HOME_PAGE_NAME ='${UberDriveConstants.HOME_MODULE_ROUTER_NAME}/Init/homepage';
   // ignore: constant_identifier_names
   static const TRIP_PAGE_NAME ='${UberDriveConstants.HOME_MODULE_ROUTER_NAME}/Init${UberDriveConstants.TRIP_MODULE_ROUTER_NAME}/corrida';
+ 
+ 
+ 
+  static const PATH_IMAGE ='assets/images/';
+   
 
+   
 }

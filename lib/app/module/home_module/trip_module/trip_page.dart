@@ -1,12 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_getit/flutter_getit.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:uber_clone_core/uber_clone_core.dart';
-import 'package:uber_clone_driver/app/module/auth/controller/authentication_controller.dart';
-import 'package:uber_clone_driver/app/module/home_module/home_controller.dart';
-import 'package:uber_clone_driver/app/module/home_module/home_page.dart';
+import 'package:uber_clone_driver/app/helper/uber_drive_constants.dart';
 class TripPage extends StatefulWidget {
   
   const TripPage({super.key}) ;
@@ -57,15 +54,7 @@ class _TripPageState extends State<TripPage> {
                             elevation: 5,
                             padding: const EdgeInsets.fromLTRB(32, 16, 32, 16)),
                         onPressed: () {
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => HomePage(
-                                      auth: context .get<AuthenticationController>(),
-                                      homeController: context .get<HomeController>(),
-                                    )),
-                            (route) => false,
-                          );
+                          Navigator.of(context).pushNamedAndRemoveUntil(UberDriveConstants.HOME_PAGE_NAME,(_) => false);
                         },
                         child: const Text('Finalizar'),
                       )))

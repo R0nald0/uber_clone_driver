@@ -1,12 +1,14 @@
 
 
 part of '../home_page.dart';
-    
+
+typedef OnTap = void Function();  
 class CardTripItem extends StatelessWidget {
   final Requisicao requisicao;
+  final OnTap? onTap;
 
 
-  const CardTripItem({ super.key , required this.requisicao });
+  const CardTripItem({ super.key , required this.requisicao,required this.onTap });
   
   @override
   Widget build(BuildContext context) {
@@ -57,9 +59,7 @@ class CardTripItem extends StatelessWidget {
                             ),
                           ],
                         ),
-                        onTap: () {
-                          Navigator.of(context).pushNamed(UberDriveConstants.TRIP_PAGE_NAME,arguments: requisicao);
-                        },
+                        onTap: onTap,
                       ),
                     );
 }

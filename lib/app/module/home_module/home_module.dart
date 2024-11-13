@@ -17,10 +17,10 @@ class HomeModule extends FlutterGetItModule {
           name: '/Init',
           bindings: [
             Bind.lazySingleton((i) => AuthenticationController(authService: i())),
-            Bind.lazySingleton((i) => LocationServiceImpl(locationRepositoryImpl: i())),
+            Bind.lazySingleton((i) => LocationServiceImpl(locationRepositoryImpl: i(),log: i())),
             Bind.lazySingleton((i) => MapsCameraService()),
-            
           ],
+          
           pages: [
             FlutterGetItPageRouter(
               name: '/homepage',
@@ -30,7 +30,9 @@ class HomeModule extends FlutterGetItModule {
                     locattionService: i(),
                     requisitionRepository: i(),
                     userRepository: i(),
-                    mapsCameraService: i()
+                    mapsCameraService: i(),
+                    tripService: i(),
+                    log: i()
                   ),
                 )
               ],
