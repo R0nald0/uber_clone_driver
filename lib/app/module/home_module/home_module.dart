@@ -49,9 +49,20 @@ class HomeModule extends FlutterGetItModule {
                   FlutterGetItPageRouter(
                     name:'/corrida'  ,
                     bindings: [
-                      Bind.lazySingleton((i) => TripController())
+                      Bind.lazySingleton((i) => TripController(
+                        locattionService: i(),
+                         
+                         requisitionRepository: i(),
+                          userRepository: i(),
+                          mapsCameraService: i(),
+                          tripService: i(),
+                          log: i()
+
+                      ))
                     ],
-                    builder: (context) => TripPage( ),
+                    builder: (context) => TripPage(
+                      tripController: context.get<TripController>(),
+                     ),
                   ),
                 ],
         )
