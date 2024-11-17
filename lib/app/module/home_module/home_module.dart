@@ -51,8 +51,7 @@ class HomeModule extends FlutterGetItModule {
                     bindings: [
                       Bind.lazySingleton((i) => TripController(
                         locattionService: i(),
-                         
-                         requisitionRepository: i(),
+                          requisitionService: i(),
                           userRepository: i(),
                           mapsCameraService: i(),
                           tripService: i(),

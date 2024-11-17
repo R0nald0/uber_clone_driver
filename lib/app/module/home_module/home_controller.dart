@@ -15,21 +15,21 @@ class HomeController = HomeControllerBase with _$HomeController;
 
 abstract class HomeControllerBase with Store {
   final LocationServiceImpl _locationServiceImpl;
-  final IRequisitionRepository _requisitionRepository;
+  final IRequistionService _requisitionService;
   final IUserRepository _userRepository;
   final MapsCameraService _mapsCameraService;
   final ITripSerivce _tripService;
   final IAppUberLog _log;
   final Completer<GoogleMapController> controler = Completer();
 
-  HomeControllerBase({
-    required LocationServiceImpl locattionService,
-    required IRequisitionRepository requisitionRepository,
-    required IUserRepository userRepository,
-    required MapsCameraService mapsCameraService,
-    required ITripSerivce tripService,
-    required IAppUberLog log
-  })  : _requisitionRepository = requisitionRepository,
+  HomeControllerBase(
+      {required LocationServiceImpl locattionService,
+      required IRequistionService requisitionRepository,
+      required IUserRepository userRepository,
+      required MapsCameraService mapsCameraService,
+      required ITripSerivce tripService,
+      required IAppUberLog log})
+      : _requisitionService = requisitionRepository,
         _locationServiceImpl = locattionService,
         _userRepository = userRepository,
         _mapsCameraService = mapsCameraService,
@@ -136,21 +136,29 @@ abstract class HomeControllerBase with Store {
     final user = _usuario!.copyWith(
         latitude: actualPosition.latitude, longitude: actualPosition.longitude);
 
-    final pathImageIcon = await _locationServiceImpl
-        .markerPositionIconCostomizer("destination1", 0.0);
+   /*  final pathImageIcon = await _locationServiceImpl.markerPositionIconCostomizer('carro', 0.0);
     final myMarkerLocal = _locationServiceImpl.createLocationMarker(
-        user.latitude, user.longitude, null, "my_local", 'meu local', 10);
+        user.latitude, user.longitude, pathImageIcon, "my_local", 'meu local', 10); */
 
-    _markers.add(myMarkerLocal);
+   final  myMarkerLocal   = await _createMarker(
+    user.latitude,
+    user.longitude,
+    '${UberDriveConstants.PATH_IMAGE}carro.png' ,
+     "my_local", 
+     'meu local',
+     const Size(45,45)
+     );
+
+       _markers.add(myMarkerLocal);
 
     _cameraPosition = CameraPosition(
       target: LatLng(user.latitude, user.longitude),
-      zoom: 12,
+      zoom: 14,
     );
 
     _usuario = user;
-
     _mapsCameraService.moveCamera(_cameraPosition!, controler);
+
   }
 
   @action
@@ -162,7 +170,7 @@ abstract class HomeControllerBase with Store {
 
     if (_usuario != null) {
       final pathImageIcon = await _locationServiceImpl
-          .markerPositionIconCostomizer("destination1", 0.0);
+          .markerPositionIconCostomizer("destination1", 0.0,null);
       final myMarkerLocal = _locationServiceImpl.createLocationMarker(
           addres.latitude,
           addres.longitude,
@@ -194,7 +202,7 @@ abstract class HomeControllerBase with Store {
   Future<void> findTrips() async {
     _errorMessage = null;
     try {
-      final requisicoes = await _requisitionRepository.findActvitesTrips();
+      final requisicoes = await _requisitionService.findActvitesTrips();
       if (requisicoes.isNotEmpty) {
         _requisicoes = requisicoes;
       }
@@ -218,11 +226,9 @@ abstract class HomeControllerBase with Store {
         return;
       }
 
-      final activeRequisicao =
-          await _requisitionRepository.findActvitesTripsById(idUsuario);
-     _requisicaoActive = activeRequisicao;
+      final activeRequisicao = await _requisitionService.findActvitesTripsById(idUsuario);
+      _requisicaoActive = activeRequisicao;
       await showLocationsOnMap();
-      
     } on RequisicaoException catch (e) {
       _errorMessage = e.message;
     }
@@ -248,45 +254,47 @@ abstract class HomeControllerBase with Store {
       final destino = _requisicaoActive!.destino;
       await _traceRouter(addressOrigem, destino);
 
-      final markerOne = await _addMarkersOnMap(
-          addressOrigem,
+      final markerOne = await _createMarker(
+          addressOrigem.latitude,
+          addressOrigem.longitude,
           '${UberDriveConstants.PATH_IMAGE}passageiro.png',
           'position1',
-          'passageiro');
-   
-      final markerTwo = await _addMarkersOnMap(
-          destino,
+          'passageiro',null);
+
+      final markerTwo = await _createMarker(
+          destino.latitude,
+          destino.longitude,
           '${UberDriveConstants.PATH_IMAGE}destination2.png',
           'position2',
-          'destination');
-      _markers.addAll([markerOne ,markerTwo]);
+          'destination',null);
+      _markers.addAll([markerOne, markerTwo]);
 
       _mapsCameraService.moverCameraBound(
           addressOrigem, destino, 120, controler);
-    } on AddresException catch(e,s) {
-        throw RequisicaoException(message:e.message ,stackTrace:s);
+    } on AddresException catch (e, s) {
+      throw RequisicaoException(message: e.message, stackTrace: s);
     }
   }
 
-  Future<Marker> _addMarkersOnMap(Address fistAddress, String pathImage,
-      String idMarcador, String tiuloLocal) async {
+  Future<Marker> _createMarker(double latitude, double longitude,String pathImage,String idMarcador, String tiuloLocal,Size? sizeIcon) async {
     final pathImageIconOne =
-        await _locationServiceImpl.markerPositionIconCostomizer(pathImage, 200);
+        await _locationServiceImpl.markerPositionIconCostomizer(pathImage, 200,sizeIcon);
+
     return _locationServiceImpl.createLocationMarker(
-        fistAddress.latitude,
-        fistAddress.longitude,
+        latitude,
+        longitude,
         pathImageIconOne,
         idMarcador,
         tiuloLocal,
         BitmapDescriptor.hueBlue);
   }
 
-
   Future<void> _traceRouter(Address firstAddres, Address secondAdress) async {
     try {
-      final apiKey =  ""; // dotenv.env['maps_key'];
+      final apiKey =
+          ""; // dotenv.env['maps_key'];
       if (apiKey == null) {
-        throw  AddresException(message: 'erro ao buscar dados');
+        throw AddresException(message: 'erro ao buscar dados');
       }
       _polynesRouter = <Polyline>{};
       if (_requisicaoActive != null) {
@@ -295,15 +303,39 @@ abstract class HomeControllerBase with Store {
         final linesCordenates = Set<Polyline>.of(polylinesData.router.values);
         _polynesRouter = linesCordenates;
       }
-    }on NotInitializedError catch(e,s) {
-      _log.erro('erro ao buscar api key',e,s);
-       throw AddresException(message: 'Algo deu errado ao buscar dados da viagem',stackTrace: s);
-    }on AddresException catch(e,s){
-        _log.erro('erro ao buscar api key',e,s);
-       throw AddresException(message: 'erro ao buscar dados da viagem',stackTrace: s);
-    } on Exception catch( e,s){
-            _log.erro('erro desconhecido',e,s);
-       throw AddresException(message: 'erro desconhecido',stackTrace: s);
+    } on NotInitializedError catch (e, s) {
+      _log.erro('erro ao buscar api key', e, s);
+      throw AddresException(
+          message: 'Algo deu errado ao buscar dados da viagem', stackTrace: s);
+    } on AddresException catch (e, s) {
+      _log.erro('erro ao buscar api key', e, s);
+      throw AddresException(
+          message: 'erro ao buscar dados da viagem', stackTrace: s);
+    } on Exception catch (e, s) {
+      _log.erro('erro desconhecido', e, s);
+      throw AddresException(message: 'erro desconhecido', stackTrace: s);
+    }
+  }
+
+  Future<void> acceptedtrip(Requisicao request) async {
+    try {
+      _requisicaoActive = null;
+      if (_usuario == null ||
+          _usuario!.idUsuario == null ||
+          _usuario!.idUsuario!.isEmpty) {
+        _errorMessage = 'Dados do motorista inválidos';
+        return;
+      }
+
+      final updateRequest =
+          request.copyWith(motorista: _usuario, status: Status.A_CAMINHO);
+
+      final requistionUpdated =
+          await _requisitionService.updataDataRequisition(updateRequest);
+
+      _requisicaoActive = requistionUpdated;
+    } on RequisicaoException catch (e) {
+      _errorMessage = e.message;
     }
   }
 }

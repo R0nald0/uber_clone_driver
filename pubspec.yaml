@@ -84,6 +84,7 @@ flutter:
      - assets/images/fundo.png
      - assets/images/destination2.png
      - assets/images/passageiro.png
+     - assets/images/carro.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

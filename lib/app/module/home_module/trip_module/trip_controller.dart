@@ -14,7 +14,7 @@ class TripController = TripControllerBase with _$TripController;
 
 abstract class TripControllerBase with Store {
   final LocationServiceImpl _locationServiceImpl;
-  final IRequisitionRepository _requisitionRepository;
+  final IRequistionService _requisitionService;
   final IUserRepository _userRepository;
   final MapsCameraService _mapsCameraService;
   final ITripSerivce _tripService;
@@ -23,12 +23,12 @@ abstract class TripControllerBase with Store {
 
   TripControllerBase(
       {required LocationServiceImpl locattionService,
-      required IRequisitionRepository requisitionRepository,
+      required IRequistionService requisitionService,
       required IUserRepository userRepository,
       required MapsCameraService mapsCameraService,
       required ITripSerivce tripService,
       required IAppUberLog log})
-      : _requisitionRepository = requisitionRepository,
+      : _requisitionService = requisitionService,
         _locationServiceImpl = locattionService,
         _userRepository = userRepository,
         _mapsCameraService = mapsCameraService,
@@ -90,38 +90,37 @@ abstract class TripControllerBase with Store {
     }
     //await getUserLocation();
   }
-  
-  Future<void> initActivetedTrip(Requisicao? request) async{ 
-    try {
-  if(request == null){
-    _errorMessage = "erro ao buscar dados da requisição";
-    _requisicaoActive = Requisicao.empty();
-    return;
-  }
-     
-  if (_isServiceEnable == false  || 
-     _locationPermission == LocationPermission.denied || 
-     _locationPermission == LocationPermission.deniedForever
-     ) {
-       await getPermissionLocation();   
-      }
-  
-  _requisicaoActive = request;
-  await showLocationsOnMap();
-} on RequisicaoException catch (e) {
-    _errorMessage = e.message;
-    _requisicaoActive = Requisicao.empty();
-     return;
-}
 
+  Future<void> initActivetedTrip(Requisicao? request) async {
+    try {
+      if (request == null) {
+        _errorMessage = "erro ao buscar dados da requisição";
+        _requisicaoActive = Requisicao.empty();
+        return;
+      }
+
+      if (_isServiceEnable == false ||
+          _locationPermission == LocationPermission.denied ||
+          _locationPermission == LocationPermission.deniedForever) {
+        await getPermissionLocation();
+      }
+
+      _requisicaoActive = request;
+      await showLocationsOnMap();
+    } on RequisicaoException catch (e) {
+      _errorMessage = e.message;
+      _requisicaoActive = Requisicao.empty();
+      return;
+    }
   }
-            
+
   @action
   Future<void> showLocationsOnMap() async {
     _errorMessage = null;
     try {
       if (_requisicaoActive == null) {
-         throw RequisicaoException(message: 'erro ao buscar dados da requisição');
+        throw RequisicaoException(
+            message: 'erro ao buscar dados da requisição');
       }
       final addressOrigem = Address(
           bairro: "",
@@ -147,6 +146,7 @@ abstract class TripControllerBase with Store {
           '${UberDriveConstants.PATH_IMAGE}destination2.png',
           'position2',
           'destination');
+     
       _markers.addAll([markerOne, markerTwo]);
 
       _mapsCameraService.moverCameraBound(
@@ -159,7 +159,7 @@ abstract class TripControllerBase with Store {
   Future<Marker> _addMarkersOnMap(Address fistAddress, String pathImage,
       String idMarcador, String tiuloLocal) async {
     final pathImageIconOne =
-        await _locationServiceImpl.markerPositionIconCostomizer(pathImage, 200);
+        await _locationServiceImpl.markerPositionIconCostomizer(pathImage, 200,null);
     return _locationServiceImpl.createLocationMarker(
         fistAddress.latitude,
         fistAddress.longitude,

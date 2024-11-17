@@ -61,8 +61,8 @@ class _HomePageState extends State<HomePage> with DialogLoader {
       await widget._homeController.getUserData(idUser);
       await widget._homeController.findTrips();
       hideLoader();
-    } 
-     callMessager();
+    }
+    callMessager();
     final serviceEnableReaction = reaction<bool>(
         (_) => widget._homeController.isServiceEnable, (isServiceEnable) {
       if (!isServiceEnable) {
@@ -85,75 +85,96 @@ class _HomePageState extends State<HomePage> with DialogLoader {
 
     final requisiaoRection = reaction<Requisicao?>(
         (_) => widget._homeController.requisicaoActive, (requisicao) {
-           showInfoRequistionDialog(
-            requisicao,
-            () {
-               hideLoader();
-               Navigator.of(context).pushNamedAndRemoveUntil(UberDriveConstants.TRIP_PAGE_NAME,arguments: requisicao,(_)=> false);     
-            },
-            () => widget._homeController.getPermissionLocation(),
-            ); 
+      showInfoRequistionDialog(
+        requisicao,
+        ()  async {
+          if (requisicao != null) {
+            await  widget._homeController.acceptedtrip(requisicao);
+            hideLoader();
+            if (mounted) {
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                UberDriveConstants.TRIP_PAGE_NAME,
+                arguments: requisicao,
+                (_) => false);
+            }
+        
+        }
+        },
+        () => widget._homeController.getPermissionLocation(),
+      );
     });
-    listReactions.addAll([locationPermissionReaction, serviceEnableReaction,requisiaoRection]);
+    listReactions.addAll(
+        [locationPermissionReaction, serviceEnableReaction, requisiaoRection]);
   }
 
-  void showInfoRequistionDialog(Requisicao? requisicao,VoidCallback onPositiveButton,VoidCallback onNegativeButton) {
+  void showInfoRequistionDialog(Requisicao? requisicao,
+      VoidCallback onPositiveButton, VoidCallback onNegativeButton) {
     if (requisicao != null) {
-        
-       showDialog(context: context, 
-       builder:(context) {
-           var theme = Theme.of(context);
-           return AlertDialog(
+      showDialog(
+        context: context,
+        builder: (context) {
+          var theme = Theme.of(context);
+          return AlertDialog(
             content: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                 Text("Dados da viagem",
-                  style:theme.textTheme.titleLarge,
+                Text(
+                  "Dados da viagem",
+                  style: theme.textTheme.titleLarge,
                 ),
-                const SizedBox(height: 30,),
-                 Text("Local : ${requisicao.destino.nomeDestino}",
+                const SizedBox(
+                  height: 30,
+                ),
+                Text(
+                  "Local : ${requisicao.destino.nomeDestino}",
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                   style: theme.textTheme.titleMedium?.copyWith(fontSize: 18),
                 ),
-                const SizedBox(height: 5,),
-                Text("Valor :R\$ ${requisicao.valorCorrida} ",
-                 style: theme.textTheme.titleMedium?.copyWith(fontSize: 18),
+                const SizedBox(
+                  height: 5,
                 ),
-                const SizedBox(height: 5,),
-                 Text("Passageiro :${requisicao.passageiro.nome}",
-                 style: theme.textTheme.titleMedium?.copyWith(fontSize: 18),
+                Text(
+                  "Valor :R\$ ${requisicao.valorCorrida} ",
+                  style: theme.textTheme.titleMedium?.copyWith(fontSize: 18),
                 ),
-                
+                const SizedBox(
+                  height: 5,
+                ),
+                Text(
+                  "Passageiro :${requisicao.passageiro.nome}",
+                  style: theme.textTheme.titleMedium?.copyWith(fontSize: 18),
+                ),
               ],
             ),
             actions: [
-              TextButton(onPressed: (){
-                 Navigator.of(context).pop();
-                 onPositiveButton();
-                }, 
-              child: const Text(
-                "Aceitar Viagem",
-                )
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    onPositiveButton();
+                  },
+                  child: const Text(
+                    "Aceitar Viagem",
+                  )),
+              const SizedBox(
+                width: 10,
               ),
-              const SizedBox(width: 10,),
-              TextButton(onPressed: (){
-               Navigator.of(context).pop();
-                 onNegativeButton();
-                }, 
-              child: const Text(
-                "Rejeitar Viagem",
-                style: TextStyle(
-                  color: Colors.redAccent
-                ),
-                )
-              )
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    onNegativeButton();
+                  },
+                  child: const Text(
+                    "Rejeitar Viagem",
+                    style: TextStyle(color: Colors.redAccent),
+                  ))
             ],
-           );       
-       },);
-    } 
+          );
+        },
+      );
+    }
   }
 
   void callMessager() {
@@ -191,7 +212,6 @@ class _HomePageState extends State<HomePage> with DialogLoader {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Motorista'), actions: [
-      
         PopupMenuButton<String>(
             onSelected: _escolhaItem,
             itemBuilder: (context) => listItens.map((String item) {
@@ -213,10 +233,10 @@ class _HomePageState extends State<HomePage> with DialogLoader {
                     itemBuilder: (context, index) {
                       final requisicao =
                           widget._homeController.requisicoes[index];
-                        
+
                       return CardTripItem(
                         requisicao: requisicao,
-                        onTap: () async{
+                        onTap: () async {
                           await widget._homeController.viewTripInfo(requisicao);
                         },
                       );
