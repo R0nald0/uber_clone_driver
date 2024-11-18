@@ -21,6 +21,9 @@ abstract class HomeControllerBase with Store {
   final ITripSerivce _tripService;
   final IAppUberLog _log;
   final Completer<GoogleMapController> controler = Completer();
+  
+  late Marker markerOne;
+  late Marker markerTwo;
 
   HomeControllerBase(
       {required LocationServiceImpl locattionService,
@@ -136,10 +139,6 @@ abstract class HomeControllerBase with Store {
     final user = _usuario!.copyWith(
         latitude: actualPosition.latitude, longitude: actualPosition.longitude);
 
-   /*  final pathImageIcon = await _locationServiceImpl.markerPositionIconCostomizer('carro', 0.0);
-    final myMarkerLocal = _locationServiceImpl.createLocationMarker(
-        user.latitude, user.longitude, pathImageIcon, "my_local", 'meu local', 10); */
-
    final  myMarkerLocal   = await _createMarker(
     user.latitude,
     user.longitude,
@@ -158,7 +157,6 @@ abstract class HomeControllerBase with Store {
 
     _usuario = user;
     _mapsCameraService.moveCamera(_cameraPosition!, controler);
-
   }
 
   @action
@@ -202,10 +200,21 @@ abstract class HomeControllerBase with Store {
   Future<void> findTrips() async {
     _errorMessage = null;
     try {
-      final requisicoes = await _requisitionService.findActvitesTrips();
-      if (requisicoes.isNotEmpty) {
-        _requisicoes = requisicoes;
-      }
+      final requisicoesSt =  _requisitionService.findAndObserverTrips();
+      requisicoesSt.listen(
+          (requisicaoList){
+             if(requisicaoList.isEmpty){
+             _requisicoes = [];
+              return;
+           }
+             _requisicoes.clear();
+             _requisicoes =  [...requisicaoList];
+          },
+        onError: (err){
+          _errorMessage =err;
+        }
+      );
+     
     } on RequisicaoException catch (e, s) {
       _errorMessage = e.message;
       if (kDebugMode) {
@@ -254,14 +263,14 @@ abstract class HomeControllerBase with Store {
       final destino = _requisicaoActive!.destino;
       await _traceRouter(addressOrigem, destino);
 
-      final markerOne = await _createMarker(
+       markerOne = await _createMarker(
           addressOrigem.latitude,
           addressOrigem.longitude,
           '${UberDriveConstants.PATH_IMAGE}passageiro.png',
           'position1',
           'passageiro',null);
 
-      final markerTwo = await _createMarker(
+       markerTwo = await _createMarker(
           destino.latitude,
           destino.longitude,
           '${UberDriveConstants.PATH_IMAGE}destination2.png',
@@ -316,7 +325,12 @@ abstract class HomeControllerBase with Store {
       throw AddresException(message: 'erro desconhecido', stackTrace: s);
     }
   }
-
+  Future<void> rejectTrip() async{
+    _polynesRouter = {};
+    _markers.removeAll([markerOne, markerTwo]);
+    _requisicaoActive = null;
+    await getPermissionLocation();
+  }
   Future<void> acceptedtrip(Requisicao request) async {
     try {
       _requisicaoActive = null;

@@ -83,8 +83,7 @@ class _HomePageState extends State<HomePage> with DialogLoader {
       }
     });
 
-    final requisiaoRection = reaction<Requisicao?>(
-        (_) => widget._homeController.requisicaoActive, (requisicao) {
+    final requisiaoRection = reaction<Requisicao?>((_) => widget._homeController.requisicaoActive, (requisicao) {
       showInfoRequistionDialog(
         requisicao,
         ()  async {
@@ -97,10 +96,12 @@ class _HomePageState extends State<HomePage> with DialogLoader {
                 arguments: requisicao,
                 (_) => false);
             }
-        
         }
         },
-        () => widget._homeController.getPermissionLocation(),
+        (){ 
+           widget._homeController.rejectTrip();
+           
+          },
       );
     });
     listReactions.addAll(
@@ -210,8 +211,12 @@ class _HomePageState extends State<HomePage> with DialogLoader {
 
   @override
   Widget build(BuildContext context) {
+    final  theme = Theme.of(context);
+
+
     return Scaffold(
       appBar: AppBar(title: const Text('Motorista'), actions: [
+  
         PopupMenuButton<String>(
             onSelected: _escolhaItem,
             itemBuilder: (context) => listItens.map((String item) {
@@ -222,14 +227,22 @@ class _HomePageState extends State<HomePage> with DialogLoader {
                 }).toList())
       ]),
       body: Column(
+      
         children: [
           Expanded(
             flex: 2,
             child: Padding(
               padding: const EdgeInsets.all(2),
+            
               child: Observer(builder: (context) {
-                return ListView.builder(
-                    itemCount: widget._homeController.requisicoes.length,
+               final listRequistions = widget._homeController.requisicoes;
+                return  listRequistions.isEmpty 
+                ? Center(
+                  child:Text("Nenhuma Corrida ativa no momento,aguarde...",
+                  style: theme.textTheme.labelLarge?.copyWith(fontSize: 18) ,
+                  ),)
+                : ListView.builder(
+                    itemCount: listRequistions.length,
                     itemBuilder: (context, index) {
                       final requisicao =
                           widget._homeController.requisicoes[index];
