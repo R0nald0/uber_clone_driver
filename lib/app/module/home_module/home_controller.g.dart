@@ -45,6 +45,24 @@ mixin _$HomeController on HomeControllerBase, Store {
     });
   }
 
+  late final _$_requisicaoInfoAtom =
+      Atom(name: 'HomeControllerBase._requisicaoInfo', context: context);
+
+  Requisicao? get requisicaoInfo {
+    _$_requisicaoInfoAtom.reportRead();
+    return super._requisicaoInfo;
+  }
+
+  @override
+  Requisicao? get _requisicaoInfo => requisicaoInfo;
+
+  @override
+  set _requisicaoInfo(Requisicao? value) {
+    _$_requisicaoInfoAtom.reportWrite(value, super._requisicaoInfo, () {
+      super._requisicaoInfo = value;
+    });
+  }
+
   late final _$_usuarioAtom =
       Atom(name: 'HomeControllerBase._usuario', context: context);
 
@@ -187,6 +205,15 @@ mixin _$HomeController on HomeControllerBase, Store {
     _$_polynesRouterAtom.reportWrite(value, super._polynesRouter, () {
       super._polynesRouter = value;
     });
+  }
+
+  late final _$findRequisitionActiveAsyncAction =
+      AsyncAction('HomeControllerBase.findRequisitionActive', context: context);
+
+  @override
+  Future<void> findRequisitionActive() {
+    return _$findRequisitionActiveAsyncAction
+        .run(() => super.findRequisitionActive());
   }
 
   late final _$getCameraUserLocationPositionAsyncAction = AsyncAction(

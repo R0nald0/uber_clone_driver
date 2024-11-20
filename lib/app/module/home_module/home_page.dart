@@ -55,11 +55,14 @@ class _HomePageState extends State<HomePage> with DialogLoader {
   }
 
   initReactions() async {
+
     final idUser = widget._auth.dataStringUser;
     if (idUser != null) {
+      await widget._homeController.findRequisitionActive();
       showLoaderDialog();
       await widget._homeController.getUserData(idUser);
       await widget._homeController.findTrips();
+      
       hideLoader();
     }
     callMessager();
@@ -73,7 +76,7 @@ class _HomePageState extends State<HomePage> with DialogLoader {
     final locationPermissionReaction = reaction<LocationPermission?>(
         (_) => widget._homeController.locationPermission, (permission) {
       if (permission == LocationPermission.denied) {
-        dialogLocationPermissionDenied(() {
+          dialogLocationPermissionDenied(() {
           widget._homeController.getPermissionLocation();
         });
       } else if (permission == LocationPermission.deniedForever) {
@@ -82,71 +85,102 @@ class _HomePageState extends State<HomePage> with DialogLoader {
         });
       }
     });
+    
 
-    final requisiaoRection = reaction<Requisicao?>((_) => widget._homeController.requisicaoActive, (requisicao) {
+  final requisiaoRection = autorun((_) {
+       final requestActive = widget._homeController.requisicaoActive;
+       if (requestActive != null || requestActive?.motorista != null) {
+           Navigator.of(context).pushNamedAndRemoveUntil(
+                  UberDriveConstants.TRIP_PAGE_NAME,
+                  arguments: requestActive,
+                  (_) => false);
+       }
+    },);
+
+
+    final requisiaoRectionInfo = reaction<Requisicao?>(
+        (_) => widget._homeController.requisicaoInfo, (requisicaoInfo) {
       showInfoRequistionDialog(
-        requisicao,
-        ()  async {
-          if (requisicao != null) {
-            await  widget._homeController.acceptedtrip(requisicao);
-            hideLoader();
-            if (mounted) {
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                UberDriveConstants.TRIP_PAGE_NAME,
-                arguments: requisicao,
-                (_) => false);
-            }
-        }
+        requisicaoInfo,
+        () async {
+          if (requisicaoInfo != null) {
+            await widget._homeController.acceptedtrip(requisicaoInfo);
+           // hideLoader();
+          }
         },
-        (){ 
-           widget._homeController.rejectTrip();
-           
-          },
+        () {
+          widget._homeController.rejectTrip();
+        },
       );
     });
     listReactions.addAll(
-        [locationPermissionReaction, serviceEnableReaction, requisiaoRection]);
+        [locationPermissionReaction, serviceEnableReaction, requisiaoRection,requisiaoRectionInfo]);
   }
 
   void showInfoRequistionDialog(Requisicao? requisicao,
       VoidCallback onPositiveButton, VoidCallback onNegativeButton) {
     if (requisicao != null) {
       showDialog(
+        barrierDismissible: false,
         context: context,
         builder: (context) {
           var theme = Theme.of(context);
           return AlertDialog(
+            title: Text(
+              "Dados da viagem",
+              style: theme.textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
             content: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Dados da viagem",
-                  style: theme.textTheme.titleLarge,
-                ),
-                const SizedBox(
-                  height: 30,
-                ),
-                Text(
-                  "Local : ${requisicao.destino.nomeDestino}",
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                  style: theme.textTheme.titleMedium?.copyWith(fontSize: 18),
-                ),
-                const SizedBox(
-                  height: 5,
-                ),
-                Text(
-                  "Valor :R\$ ${requisicao.valorCorrida} ",
-                  style: theme.textTheme.titleMedium?.copyWith(fontSize: 18),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.location_on),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        "Local :${requisicao.destino.nomeDestino}",
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                        style:
+                            theme.textTheme.titleMedium?.copyWith(fontSize: 18),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(
                   height: 5,
                 ),
-                Text(
-                  "Passageiro :${requisicao.passageiro.nome}",
-                  style: theme.textTheme.titleMedium?.copyWith(fontSize: 18),
+                Row(
+                  children: [
+                    const Icon(Icons.attach_money_outlined),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        "Valor :R\$ ${requisicao.valorCorrida} ",
+                        style:
+                            theme.textTheme.titleMedium?.copyWith(fontSize: 18),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    const Icon(Icons.person),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        "Passageiro :${requisicao.passageiro.nome}",
+                        style:
+                            theme.textTheme.titleMedium?.copyWith(fontSize: 18),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -191,12 +225,11 @@ class _HomePageState extends State<HomePage> with DialogLoader {
 
   @override
   void initState() {
-    super.initState();
-
     WidgetsBinding.instance.addObserver(lifeCycle);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       initReactions();
     });
+    super.initState();
     //TODO IMPLEMENTAR CICLO DE VIDA PARA VERIFICAR SE O USUARIO DEU A PERMISSAO AO VOLTAR PAR O APP
   }
 
@@ -211,12 +244,10 @@ class _HomePageState extends State<HomePage> with DialogLoader {
 
   @override
   Widget build(BuildContext context) {
-    final  theme = Theme.of(context);
-
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Motorista'), actions: [
-  
         PopupMenuButton<String>(
             onSelected: _escolhaItem,
             itemBuilder: (context) => listItens.map((String item) {
@@ -227,33 +258,35 @@ class _HomePageState extends State<HomePage> with DialogLoader {
                 }).toList())
       ]),
       body: Column(
-      
         children: [
           Expanded(
             flex: 2,
             child: Padding(
               padding: const EdgeInsets.all(2),
-            
               child: Observer(builder: (context) {
-               final listRequistions = widget._homeController.requisicoes;
-                return  listRequistions.isEmpty 
-                ? Center(
-                  child:Text("Nenhuma Corrida ativa no momento,aguarde...",
-                  style: theme.textTheme.labelLarge?.copyWith(fontSize: 18) ,
-                  ),)
-                : ListView.builder(
-                    itemCount: listRequistions.length,
-                    itemBuilder: (context, index) {
-                      final requisicao =
-                          widget._homeController.requisicoes[index];
+                final listRequistions = widget._homeController.requisicoes;
+                return listRequistions.isEmpty
+                    ? Center(
+                        child: Text(
+                          "Nenhuma Corrida ativa no momento,aguarde...",
+                          style: theme.textTheme.labelLarge
+                              ?.copyWith(fontSize: 18),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: listRequistions.length,
+                        itemBuilder: (context, index) {
+                          final requisicao =
+                              widget._homeController.requisicoes[index];
 
-                      return CardTripItem(
-                        requisicao: requisicao,
-                        onTap: () async {
-                          await widget._homeController.viewTripInfo(requisicao);
-                        },
-                      );
-                    });
+                          return CardTripItem(
+                            requisicao: requisicao,
+                            onTap: () async {
+                              await widget._homeController
+                                  .viewTripInfo(requisicao);
+                            },
+                          );
+                        });
               }),
             ),
           ),

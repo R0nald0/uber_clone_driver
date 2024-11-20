@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:geolocator/geolocator.dart';
@@ -20,7 +18,6 @@ class TripPage extends StatefulWidget {
 class _TripPageState extends State<TripPage> with DialogLoader {
   var listReactions = <ReactionDisposer>[];
 
-  final Completer<GoogleMapController> _comtroler = Completer();
   final CameraPosition _cameraPositionViagem =
       const CameraPosition(target: LatLng(-13.001478, -38.499390), zoom: 11);
 
@@ -29,7 +26,7 @@ class _TripPageState extends State<TripPage> with DialogLoader {
   }
 
   initReactions() async {
-     
+    
      
       final reactionDisposerMessage = reaction<String?>(
         (_) => widget._controller.errorMessage, (messager) {
@@ -74,18 +71,20 @@ class _TripPageState extends State<TripPage> with DialogLoader {
             );  */
     });
 
-    listReactions.addAll([locationPermissionReaction, serviceEnableReaction,requisiaoRection]);
+    listReactions.addAll([locationPermissionReaction, serviceEnableReaction,requisiaoRection,reactionDisposerMessage]);
   }
 
   @override
   Widget build(BuildContext context) { 
- final requisicao  = ModalRoute.of(context)!.settings.arguments as Requisicao;
-  widget._controller.initActivetedTrip(requisicao); 
-
+   final requisicao  = ModalRoute.of(context)!.settings.arguments as Requisicao;
+   widget._controller.initActivetedTrip(requisicao); 
+   final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title:  Text("Corrida em andamento ${requisicao.passageiro.nome}" ),
+        title:  Text("Corrida em andamento ${requisicao.passageiro.nome}",
+    
+         ),
       ),
       body: Container(
           padding: const EdgeInsets.all(2),

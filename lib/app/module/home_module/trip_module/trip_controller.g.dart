@@ -144,6 +144,15 @@ mixin _$TripController on TripControllerBase, Store {
         .run(() => super.getPermissionLocation());
   }
 
+  late final _$initActivetedTripAsyncAction =
+      AsyncAction('TripControllerBase.initActivetedTrip', context: context);
+
+  @override
+  Future<void> initActivetedTrip(Requisicao? request) {
+    return _$initActivetedTripAsyncAction
+        .run(() => super.initActivetedTrip(request));
+  }
+
   late final _$showLocationsOnMapAsyncAction =
       AsyncAction('TripControllerBase.showLocationsOnMap', context: context);
 

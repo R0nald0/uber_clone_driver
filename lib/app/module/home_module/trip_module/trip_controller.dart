@@ -13,6 +13,7 @@ part 'trip_controller.g.dart';
 class TripController = TripControllerBase with _$TripController;
 
 abstract class TripControllerBase with Store {
+  
   final LocationServiceImpl _locationServiceImpl;
   final IRequistionService _requisitionService;
   final IUserRepository _userRepository;
@@ -20,6 +21,7 @@ abstract class TripControllerBase with Store {
   final ITripSerivce _tripService;
   final IAppUberLog _log;
   final Completer<GoogleMapController> controler = Completer();
+
 
   TripControllerBase(
       {required LocationServiceImpl locattionService,
@@ -90,13 +92,21 @@ abstract class TripControllerBase with Store {
     }
     //await getUserLocation();
   }
-
+   
+   @action
   Future<void> initActivetedTrip(Requisicao? request) async {
     try {
       if (request == null) {
         _errorMessage = "erro ao buscar dados da requisição";
         _requisicaoActive = Requisicao.empty();
         return;
+      }
+      
+      final isSucess = await  _requisitionService.saveRequisitionOnPreference(request);
+      if (!isSucess) {
+         _errorMessage = "Falha ao buscar dados da viagem ,tente novamente";
+         _requisicaoActive = Requisicao.empty();
+         return;
       }
 
       if (_isServiceEnable == false ||
@@ -113,6 +123,8 @@ abstract class TripControllerBase with Store {
       return;
     }
   }
+
+ 
 
   @action
   Future<void> showLocationsOnMap() async {
@@ -171,8 +183,8 @@ abstract class TripControllerBase with Store {
 
   Future<void> _traceRouter(Address firstAddres, Address secondAdress) async {
     try {
-      final apiKey =
-          ""; // dotenv.env['maps_key'];
+      const apiKey =
+         ""; // dotenv.env['maps_key'];
       if (apiKey == null) {
         throw AddresException(message: 'erro ao buscar dados');
       }

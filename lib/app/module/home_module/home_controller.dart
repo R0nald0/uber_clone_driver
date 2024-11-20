@@ -46,6 +46,9 @@ abstract class HomeControllerBase with Store {
   Requisicao? _requisicaoActive;
 
   @readonly
+  Requisicao? _requisicaoInfo;
+
+  @readonly
   Usuario? _usuario;
 
   @readonly
@@ -68,6 +71,17 @@ abstract class HomeControllerBase with Store {
 
   @readonly
   var _polynesRouter = <Polyline>{};
+
+  @action
+  Future<void> findRequisitionActive()async{
+        _requisicaoActive = null;
+      final activetedRequisition = await _requisitionService.readPrefenceData(UberCloneConstants.KEY_PREFERENCE_REQUISITION_ACTIVE);
+      if(activetedRequisition == null){
+        return;
+      }
+
+      _requisicaoActive = activetedRequisition;
+  }
 
   @action
   Future<void> getCameraUserLocationPosition() async {
@@ -121,6 +135,7 @@ abstract class HomeControllerBase with Store {
       case LocationPermission.unableToDetermine:
         break;
     }
+    
     await getUserLocation();
   }
 
@@ -190,6 +205,7 @@ abstract class HomeControllerBase with Store {
         _errorMessage = "erro ao recuperar dados do usuario";
       }
       _usuario = user;
+      await findRequisitionActive();
       await getPermissionLocation();
     } on UserException catch (e) {
       _errorMessage = e.message;
@@ -227,16 +243,14 @@ abstract class HomeControllerBase with Store {
   @action
   Future<void> viewTripInfo(Requisicao requisicao) async {
     try {
-      _requisicaoActive = null;
+      _requisicaoInfo = null;
       _errorMessage = null;
       final idUsuario = requisicao.passageiro.idUsuario;
       if (idUsuario == null) {
         _errorMessage = 'Requisição não encontrada';
         return;
       }
-
-      final activeRequisicao = await _requisitionService.findActvitesTripsById(idUsuario);
-      _requisicaoActive = activeRequisicao;
+      _requisicaoInfo = requisicao;
       await showLocationsOnMap();
     } on RequisicaoException catch (e) {
       _errorMessage = e.message;
@@ -247,20 +261,20 @@ abstract class HomeControllerBase with Store {
   Future<void> showLocationsOnMap() async {
     _errorMessage = null;
     try {
-      if (_requisicaoActive == null) {
+      if (_requisicaoInfo == null) {
         return;
       }
       final addressOrigem = Address(
           bairro: "",
           cep: "",
           cidade: "",
-          latitude: _requisicaoActive!.passageiro.latitude,
-          longitude: _requisicaoActive!.passageiro.longitude,
+          latitude: _requisicaoInfo!.passageiro.latitude,
+          longitude: _requisicaoInfo!.passageiro.longitude,
           nomeDestino: "",
           numero: "",
           rua: "");
 
-      final destino = _requisicaoActive!.destino;
+      final destino = _requisicaoInfo!.destino;
       await _traceRouter(addressOrigem, destino);
 
        markerOne = await _createMarker(
@@ -301,12 +315,12 @@ abstract class HomeControllerBase with Store {
   Future<void> _traceRouter(Address firstAddres, Address secondAdress) async {
     try {
       final apiKey =
-          ""; // dotenv.env['maps_key'];
+          ""; // dotenv.env['maps_key2'];
       if (apiKey == null) {
         throw AddresException(message: 'erro ao buscar dados');
       }
       _polynesRouter = <Polyline>{};
-      if (_requisicaoActive != null) {
+      if (_requisicaoInfo != null) {
         final polylinesData = await _tripService.getRoute(
             firstAddres, secondAdress, Colors.black, 5, apiKey);
         final linesCordenates = Set<Polyline>.of(polylinesData.router.values);
@@ -328,12 +342,13 @@ abstract class HomeControllerBase with Store {
   Future<void> rejectTrip() async{
     _polynesRouter = {};
     _markers.removeAll([markerOne, markerTwo]);
-    _requisicaoActive = null;
+    _requisicaoInfo = null;
+
     await getPermissionLocation();
   }
   Future<void> acceptedtrip(Requisicao request) async {
     try {
-      _requisicaoActive = null;
+      _requisicaoInfo = null;
       if (_usuario == null ||
           _usuario!.idUsuario == null ||
           _usuario!.idUsuario!.isEmpty) {
@@ -341,13 +356,13 @@ abstract class HomeControllerBase with Store {
         return;
       }
 
-      final updateRequest =
-          request.copyWith(motorista: _usuario, status: Status.A_CAMINHO);
+      final updateRequest = request.copyWith(motorista: _usuario, status: Status.A_CAMINHO);
 
-      final requistionUpdated =
-          await _requisitionService.updataDataRequisition(updateRequest);
+      final requistionUpdated = await _requisitionService.updataDataRequisition(updateRequest);
 
+      _requisicaoInfo = null;
       _requisicaoActive = requistionUpdated;
+
     } on RequisicaoException catch (e) {
       _errorMessage = e.message;
     }
