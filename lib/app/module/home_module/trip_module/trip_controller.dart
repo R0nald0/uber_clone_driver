@@ -14,7 +14,7 @@ class TripController = TripControllerBase with _$TripController;
 
 abstract class TripControllerBase with Store {
   
-  final LocationServiceImpl _locationServiceImpl;
+  final ILocationService _locationServiceImpl;
   final IRequistionService _requisitionService;
   final IUserRepository _userRepository;
   final MapsCameraService _mapsCameraService;
@@ -24,7 +24,7 @@ abstract class TripControllerBase with Store {
 
 
   TripControllerBase(
-      {required LocationServiceImpl locattionService,
+      {required ILocationService locattionService,
       required IRequistionService requisitionService,
       required IUserRepository userRepository,
       required MapsCameraService mapsCameraService,
@@ -36,6 +36,9 @@ abstract class TripControllerBase with Store {
         _mapsCameraService = mapsCameraService,
         _tripService = tripService,
         _log = log;
+
+  late final String _txBotaoPadrao ="";
+  late final Color _corPadrao =const Color( 0xffa9a9a9);      
 
   @readonly
   LocationPermission? _locationPermission;
@@ -102,12 +105,13 @@ abstract class TripControllerBase with Store {
         return;
       }
       
-      final isSucess = await  _requisitionService.saveRequisitionOnPreference(request);
-      if (!isSucess) {
+     // final isSucess = await  _requisitionService.saveRequisitionOnPreference(request);
+     // final isSucess = await  _requisitionService.createRequisition(request);
+     /*  if (!isSucess) {
          _errorMessage = "Falha ao buscar dados da viagem ,tente novamente";
          _requisicaoActive = Requisicao.empty();
          return;
-      }
+      } */
 
       if (_isServiceEnable == false ||
           _locationPermission == LocationPermission.denied ||
@@ -117,6 +121,7 @@ abstract class TripControllerBase with Store {
 
       _requisicaoActive = request;
       await showLocationsOnMap();
+      await driverOnTheWayToThePassenger();
     } on RequisicaoException catch (e) {
       _errorMessage = e.message;
       _requisicaoActive = Requisicao.empty();
@@ -124,7 +129,13 @@ abstract class TripControllerBase with Store {
     }
   }
 
- 
+   @action
+  Future<void> driverOnTheWayToThePassenger() async{
+      //buscar localização do motorista e do passagerio em tempo real 
+      // Marcar posições no mapa 
+      // botao exibe nome Iniciar  viagem com passageiro
+      // exibir localizção do motoristae do destino da viagem
+  }
 
   @action
   Future<void> showLocationsOnMap() async {
@@ -184,10 +195,7 @@ abstract class TripControllerBase with Store {
   Future<void> _traceRouter(Address firstAddres, Address secondAdress) async {
     try {
       const apiKey =
-         ""; // dotenv.env['maps_key'];
-      if (apiKey == null) {
-        throw AddresException(message: 'erro ao buscar dados');
-      }
+         "";
       _polynesRouter = <Polyline>{};
       if (_requisicaoActive != null) {
         final polylinesData = await _tripService.getRoute(
@@ -209,3 +217,9 @@ abstract class TripControllerBase with Store {
     }
   }
 }
+
+/* 
+ final dataToUpdate =  {
+        'motorista': request.motorista!.toMap(),
+        'status': request.status,
+      } ; */

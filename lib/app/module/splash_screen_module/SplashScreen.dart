@@ -61,11 +61,7 @@ class SplashScreenState extends State<SplashScreen> with DialogLoader {
     return Scaffold(
       body: Container(
           padding: const EdgeInsets.all(60),
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage("assets/images/fundo.png"),
-                fit: BoxFit.cover),
-          ),
+          color: Colors.black87,
           child: Center(
             child: Column(
               children: <Widget>[

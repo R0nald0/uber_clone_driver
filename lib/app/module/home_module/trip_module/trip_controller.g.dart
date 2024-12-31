@@ -153,6 +153,16 @@ mixin _$TripController on TripControllerBase, Store {
         .run(() => super.initActivetedTrip(request));
   }
 
+  late final _$driverOnTheWayToThePassengerAsyncAction = AsyncAction(
+      'TripControllerBase.driverOnTheWayToThePassenger',
+      context: context);
+
+  @override
+  Future<void> driverOnTheWayToThePassenger() {
+    return _$driverOnTheWayToThePassengerAsyncAction
+        .run(() => super.driverOnTheWayToThePassenger());
+  }
+
   late final _$showLocationsOnMapAsyncAction =
       AsyncAction('TripControllerBase.showLocationsOnMap', context: context);
 

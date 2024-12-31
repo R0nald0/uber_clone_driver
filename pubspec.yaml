@@ -85,6 +85,7 @@ flutter:
      - assets/images/destination2.png
      - assets/images/passageiro.png
      - assets/images/carro.png
+     - assets/images/uber_drive_logo.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

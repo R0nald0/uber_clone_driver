@@ -58,11 +58,8 @@ class LoginPageState extends State<LoginPage> with DialogLoader<LoginPage> {
     return Scaffold(
       body: Container(
           padding: const EdgeInsets.all(16),
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage("assets/images/fundo.png"),
-                fit: BoxFit.cover),
-          ),
+          color: Colors.black87,
+        
           child: Center(
             child: SingleChildScrollView(
               child: Column(
@@ -70,7 +67,7 @@ class LoginPageState extends State<LoginPage> with DialogLoader<LoginPage> {
                   const CircleAvatar(
                     radius: 120,
                     backgroundColor: null,
-                    backgroundImage: AssetImage('assets/images/logo.png'),
+                    backgroundImage: AssetImage('assets/images/uber_drive_logo.png'),
                   ),
                   camposLoginTxtV(_formKey),
                   campoBtns(widget._registerController, _formKey),

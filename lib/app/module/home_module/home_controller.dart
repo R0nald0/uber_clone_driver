@@ -14,7 +14,7 @@ part 'home_controller.g.dart';
 class HomeController = HomeControllerBase with _$HomeController;
 
 abstract class HomeControllerBase with Store {
-  final LocationServiceImpl _locationServiceImpl;
+  final ILocationService _locationServiceImpl;
   final IRequistionService _requisitionService;
   final IUserRepository _userRepository;
   final MapsCameraService _mapsCameraService;
@@ -26,7 +26,7 @@ abstract class HomeControllerBase with Store {
   late Marker markerTwo;
 
   HomeControllerBase(
-      {required LocationServiceImpl locattionService,
+      {required ILocationService locattionService,
       required IRequistionService requisitionRepository,
       required IUserRepository userRepository,
       required MapsCameraService mapsCameraService,
@@ -73,14 +73,23 @@ abstract class HomeControllerBase with Store {
   var _polynesRouter = <Polyline>{};
 
   @action
-  Future<void> findRequisitionActive()async{
-        _requisicaoActive = null;
-      final activetedRequisition = await _requisitionService.readPrefenceData(UberCloneConstants.KEY_PREFERENCE_REQUISITION_ACTIVE);
-      if(activetedRequisition == null){
-        return;
-      }
+  Future<void> findRequisitionActive() async {
+       if(_usuario  == null  ){
+          _errorMessage  =" Erro ao buscar dados do usuairo";
+          //deslogar e mandar para login page
+          return;
+       }
 
+       if (_usuario!.idRequisicaoAtiva!.isEmpty) {
+            findTrips();
+            return;
+       }
+      
+        _requisicaoActive = null;
+        
+      final activetedRequisition = await _requisitionService.verfyActivatedRequisition(_usuario!.idRequisicaoAtiva!);
       _requisicaoActive = activetedRequisition;
+
   }
 
   @action
@@ -314,11 +323,8 @@ abstract class HomeControllerBase with Store {
 
   Future<void> _traceRouter(Address firstAddres, Address secondAdress) async {
     try {
-      final apiKey =
-          ""; // dotenv.env['maps_key2'];
-      if (apiKey == null) {
-        throw AddresException(message: 'erro ao buscar dados');
-      }
+      const apiKey =
+          "";
       _polynesRouter = <Polyline>{};
       if (_requisicaoInfo != null) {
         final polylinesData = await _tripService.getRoute(
@@ -346,23 +352,39 @@ abstract class HomeControllerBase with Store {
 
     await getPermissionLocation();
   }
-  Future<void> acceptedtrip(Requisicao request) async {
+  Future<void> acceptedTrip(Requisicao request) async {
     try {
       _requisicaoInfo = null;
+      _requisicaoActive = null;
+
       if (_usuario == null ||
           _usuario!.idUsuario == null ||
           _usuario!.idUsuario!.isEmpty) {
         _errorMessage = 'Dados do motorista inválidos';
-        return;
+       throw RequisicaoException(message: 'Dados do motorista inválidos');
       }
 
-      final updateRequest = request.copyWith(motorista: _usuario, status: Status.A_CAMINHO);
+       final updatedUsuario = _usuario!.copyWith(idRequisicaoAtiva: request.id);
+      
+       final isSuccess  = await _userRepository.updateUser(updatedUsuario);
+        if(!isSuccess) {
+           const message = 'Erro ao sincornizar dados,viagem não pode ser iniciada,tente novamente';
+          _errorMessage = message ;
+          throw RequisicaoException(message: message);
+        }
 
-      final requistionUpdated = await _requisitionService.updataDataRequisition(updateRequest);
+       final updateRequest = request.copyWith(
+             motorista: updatedUsuario, 
+             status: Status.A_CAMINHO
+             );
+      
+     final requistionUpdated = await _requisitionService.updataDataRequisition(updateRequest,{
+       'status' : updateRequest.status,
+       'motorista' : updateRequest.motorista?.toMap()
+     });
 
-      _requisicaoInfo = null;
-      _requisicaoActive = requistionUpdated;
-
+     _requisicaoActive = requistionUpdated;
+    //TODO verificar se esta caindo no catch
     } on RequisicaoException catch (e) {
       _errorMessage = e.message;
     }

@@ -17,7 +17,7 @@ class HomeModule extends FlutterGetItModule {
           name: '/Init',
           bindings: [
             Bind.lazySingleton((i) => AuthenticationController(authService: i())),
-            Bind.lazySingleton((i) => LocationServiceImpl(locationRepositoryImpl: i(),log: i())),
+           // Bind.lazySingleton((i) => LocationServiceImpl(locationRepositoryImpl: i(),log: i())),
             Bind.lazySingleton((i) => MapsCameraService()),
           ],
           

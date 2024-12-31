@@ -26,8 +26,6 @@ class _TripPageState extends State<TripPage> with DialogLoader {
   }
 
   initReactions() async {
-    
-     
       final reactionDisposerMessage = reaction<String?>(
         (_) => widget._controller.errorMessage, (messager) {
       if (messager != null) {
@@ -77,7 +75,9 @@ class _TripPageState extends State<TripPage> with DialogLoader {
   @override
   Widget build(BuildContext context) { 
    final requisicao  = ModalRoute.of(context)!.settings.arguments as Requisicao;
+   
    widget._controller.initActivetedTrip(requisicao); 
+
    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(

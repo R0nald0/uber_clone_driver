@@ -58,11 +58,8 @@ class _HomePageState extends State<HomePage> with DialogLoader {
 
     final idUser = widget._auth.dataStringUser;
     if (idUser != null) {
-      await widget._homeController.findRequisitionActive();
       showLoaderDialog();
-      await widget._homeController.getUserData(idUser);
-      await widget._homeController.findTrips();
-      
+        await widget._homeController.getUserData(idUser);
       hideLoader();
     }
     callMessager();
@@ -87,24 +84,25 @@ class _HomePageState extends State<HomePage> with DialogLoader {
     });
     
 
-  final requisiaoRection = autorun((_) {
+  final requisiaoRection = autorun((_){
        final requestActive = widget._homeController.requisicaoActive;
-       if (requestActive != null || requestActive?.motorista != null) {
+       if (requestActive != null && requestActive.motorista != null) {
            Navigator.of(context).pushNamedAndRemoveUntil(
                   UberDriveConstants.TRIP_PAGE_NAME,
                   arguments: requestActive,
                   (_) => false);
        }
+       
     },);
 
 
-    final requisiaoRectionInfo = reaction<Requisicao?>(
+  final requisiaoRectionInfo = reaction<Requisicao?>(
         (_) => widget._homeController.requisicaoInfo, (requisicaoInfo) {
       showInfoRequistionDialog(
         requisicaoInfo,
         () async {
           if (requisicaoInfo != null) {
-            await widget._homeController.acceptedtrip(requisicaoInfo);
+            await widget._homeController.acceptedTrip(requisicaoInfo);
            // hideLoader();
           }
         },
