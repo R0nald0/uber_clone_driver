@@ -21,6 +21,7 @@ abstract class HomeControllerBase with Store {
   final ITripSerivce _tripService;
   final IAppUberLog _log;
   final Completer<GoogleMapController> controler = Completer();
+
   
   late Marker markerOne;
   late Marker markerTwo;
@@ -240,7 +241,7 @@ abstract class HomeControllerBase with Store {
         }
       );
      
-    } on RequisicaoException catch (e, s) {
+    } on RequestException catch (e, s) {
       _errorMessage = e.message;
       if (kDebugMode) {
         print(e);
@@ -261,7 +262,7 @@ abstract class HomeControllerBase with Store {
       }
       _requisicaoInfo = requisicao;
       await showLocationsOnMap();
-    } on RequisicaoException catch (e) {
+    } on RequestException catch (e) {
       _errorMessage = e.message;
     }
   }
@@ -304,7 +305,7 @@ abstract class HomeControllerBase with Store {
       _mapsCameraService.moverCameraBound(
           addressOrigem, destino, 120, controler);
     } on AddresException catch (e, s) {
-      throw RequisicaoException(message: e.message, stackTrace: s);
+      throw RequestException(message: e.message, stackTrace: s);
     }
   }
 
@@ -323,8 +324,9 @@ abstract class HomeControllerBase with Store {
 
   Future<void> _traceRouter(Address firstAddres, Address secondAdress) async {
     try {
-      const apiKey =
-          "";
+    
+      const apiKey =UberDriveConstants.MAPS_KEY ;
+      
       _polynesRouter = <Polyline>{};
       if (_requisicaoInfo != null) {
         final polylinesData = await _tripService.getRoute(
@@ -361,7 +363,7 @@ abstract class HomeControllerBase with Store {
           _usuario!.idUsuario == null ||
           _usuario!.idUsuario!.isEmpty) {
         _errorMessage = 'Dados do motorista inválidos';
-       throw RequisicaoException(message: 'Dados do motorista inválidos');
+       throw RequestException(message: 'Dados do motorista inválidos');
       }
 
        final updatedUsuario = _usuario!.copyWith(idRequisicaoAtiva: request.id);
@@ -370,7 +372,7 @@ abstract class HomeControllerBase with Store {
         if(!isSuccess) {
            const message = 'Erro ao sincornizar dados,viagem não pode ser iniciada,tente novamente';
           _errorMessage = message ;
-          throw RequisicaoException(message: message);
+          throw RequestException(message: message);
         }
 
        final updateRequest = request.copyWith(
@@ -385,7 +387,7 @@ abstract class HomeControllerBase with Store {
 
      _requisicaoActive = requistionUpdated;
     //TODO verificar se esta caindo no catch
-    } on RequisicaoException catch (e) {
+    } on RequestException catch (e) {
       _errorMessage = e.message;
     }
   }

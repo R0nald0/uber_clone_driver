@@ -135,6 +135,43 @@ mixin _$TripController on TripControllerBase, Store {
     });
   }
 
+  late final _$_textButtonExibithionAtom =
+      Atom(name: 'TripControllerBase._textButtonExibithion', context: context);
+
+  String? get textButtonExibithion {
+    _$_textButtonExibithionAtom.reportRead();
+    return super._textButtonExibithion;
+  }
+
+  @override
+  String? get _textButtonExibithion => textButtonExibithion;
+
+  @override
+  set _textButtonExibithion(String? value) {
+    _$_textButtonExibithionAtom.reportWrite(value, super._textButtonExibithion,
+        () {
+      super._textButtonExibithion = value;
+    });
+  }
+
+  late final _$_onActionRequestAtom =
+      Atom(name: 'TripControllerBase._onActionRequest', context: context);
+
+  Function get onActionRequest {
+    _$_onActionRequestAtom.reportRead();
+    return super._onActionRequest;
+  }
+
+  @override
+  Function get _onActionRequest => onActionRequest;
+
+  @override
+  set _onActionRequest(Function value) {
+    _$_onActionRequestAtom.reportWrite(value, super._onActionRequest, () {
+      super._onActionRequest = value;
+    });
+  }
+
   late final _$getPermissionLocationAsyncAction =
       AsyncAction('TripControllerBase.getPermissionLocation', context: context);
 
@@ -144,32 +181,50 @@ mixin _$TripController on TripControllerBase, Store {
         .run(() => super.getPermissionLocation());
   }
 
-  late final _$initActivetedTripAsyncAction =
-      AsyncAction('TripControllerBase.initActivetedTrip', context: context);
+  late final _$initActivetedRequestAsyncAction =
+      AsyncAction('TripControllerBase.initActivetedRequest', context: context);
 
   @override
-  Future<void> initActivetedTrip(Requisicao? request) {
-    return _$initActivetedTripAsyncAction
-        .run(() => super.initActivetedTrip(request));
+  Future<void> initActivetedRequest(Requisicao? request) {
+    return _$initActivetedRequestAsyncAction
+        .run(() => super.initActivetedRequest(request));
   }
 
-  late final _$driverOnTheWayToThePassengerAsyncAction = AsyncAction(
-      'TripControllerBase.driverOnTheWayToThePassenger',
+  late final _$_driverOnTheWayToThePassengerAsyncAction = AsyncAction(
+      'TripControllerBase._driverOnTheWayToThePassenger',
       context: context);
 
   @override
-  Future<void> driverOnTheWayToThePassenger() {
-    return _$driverOnTheWayToThePassengerAsyncAction
-        .run(() => super.driverOnTheWayToThePassenger());
+  Future<void> _driverOnTheWayToThePassenger() {
+    return _$_driverOnTheWayToThePassengerAsyncAction
+        .run(() => super._driverOnTheWayToThePassenger());
   }
 
-  late final _$showLocationsOnMapAsyncAction =
-      AsyncAction('TripControllerBase.showLocationsOnMap', context: context);
+  late final _$verifyStatusRequestAsyncAction =
+      AsyncAction('TripControllerBase.verifyStatusRequest', context: context);
 
   @override
-  Future<void> showLocationsOnMap() {
-    return _$showLocationsOnMapAsyncAction
-        .run(() => super.showLocationsOnMap());
+  Future<void> verifyStatusRequest() {
+    return _$verifyStatusRequestAsyncAction
+        .run(() => super.verifyStatusRequest());
+  }
+
+  late final _$initTripWithPassangerAsyncAction =
+      AsyncAction('TripControllerBase.initTripWithPassanger', context: context);
+
+  @override
+  Future<void> initTripWithPassanger() {
+    return _$initTripWithPassangerAsyncAction
+        .run(() => super.initTripWithPassanger());
+  }
+
+  late final _$_showLocationsOnMapAsyncAction =
+      AsyncAction('TripControllerBase._showLocationsOnMap', context: context);
+
+  @override
+  Future<void> _showLocationsOnMap(Requisicao request) {
+    return _$_showLocationsOnMapAsyncAction
+        .run(() => super._showLocationsOnMap(request));
   }
 
   @override

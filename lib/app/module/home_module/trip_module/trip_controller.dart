@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
@@ -21,6 +22,8 @@ abstract class TripControllerBase with Store {
   final ITripSerivce _tripService;
   final IAppUberLog _log;
   final Completer<GoogleMapController> controler = Completer();
+
+
 
 
   TripControllerBase(
@@ -61,6 +64,12 @@ abstract class TripControllerBase with Store {
   @readonly
   CameraPosition? _cameraPosition;
 
+ @readonly 
+  String? _textButtonExibithion = "";
+
+  @readonly
+  Function _onActionRequest = (){} ;
+
   @action
   Future<void> getPermissionLocation() async {
     _locationPermission = null;
@@ -74,6 +83,7 @@ abstract class TripControllerBase with Store {
     _isServiceEnable = isServiceEnable;
 
     final permission = await Geolocator.checkPermission();
+    
     switch (permission) {
       case LocationPermission.denied:
         final permission = await Geolocator.requestPermission();
@@ -97,90 +107,178 @@ abstract class TripControllerBase with Store {
   }
    
    @action
-  Future<void> initActivetedTrip(Requisicao? request) async {
+  Future<void> initActivetedRequest(Requisicao? request) async {
     try {
       if (request == null) {
         _errorMessage = "erro ao buscar dados da requisição";
         _requisicaoActive = Requisicao.empty();
         return;
       }
-      
-     // final isSucess = await  _requisitionService.saveRequisitionOnPreference(request);
-     // final isSucess = await  _requisitionService.createRequisition(request);
-     /*  if (!isSucess) {
-         _errorMessage = "Falha ao buscar dados da viagem ,tente novamente";
-         _requisicaoActive = Requisicao.empty();
-         return;
-      } */
+     
 
       if (_isServiceEnable == false ||
           _locationPermission == LocationPermission.denied ||
           _locationPermission == LocationPermission.deniedForever) {
-        await getPermissionLocation();
+         await getPermissionLocation();
       }
-
-      _requisicaoActive = request;
-      await showLocationsOnMap();
-      await driverOnTheWayToThePassenger();
-    } on RequisicaoException catch (e) {
+      final requestSubsCription = _requisitionService.findAndObserverById(request).listen(
+          (data) async{ _requisicaoActive = data;   
+           await _showLocationsOnMap(data);
+          }
+         );
+      
+     
+       await _driverOnTheWayToThePassenger();
+       await verifyStatusRequest();
+    } on RequestException catch (e) {
       _errorMessage = e.message;
       _requisicaoActive = Requisicao.empty();
       return;
     }
   }
 
-   @action
-  Future<void> driverOnTheWayToThePassenger() async{
-      //buscar localização do motorista e do passagerio em tempo real 
-      // Marcar posições no mapa 
-      // botao exibe nome Iniciar  viagem com passageiro
-      // exibir localizção do motoristae do destino da viagem
+  @action
+  Future<void> _driverOnTheWayToThePassenger() async{
+
+    try {
+  var userPosition  =  _locationServiceImpl.getUserRealTimeLocation();
+  _textButtonExibithion ='Cheguei no local do passageiro' ;
+
+  userPosition.listen((data) async{
+      final latitude =  data.latitude;
+      final longitude = data.longitude;  
+      
+      final updatedUsuario = _requisicaoActive!.motorista!.copyWith(latitude: latitude,longitude: longitude); 
+     _requisicaoActive = _requisicaoActive!.copyWith(motorista: updatedUsuario);
+      
+      await _showLocationsOnMap(_requisicaoActive!);
+      
+      await _requisitionService.updateDataTripOn(_requisicaoActive!);
+  
+   }   
+  );
+} on RequestException catch (e) {
+       _errorMessage = e.message;
+      _requisicaoActive = Requisicao.empty();
+       return;
+    }
+
+ 
   }
 
+ @action
+ Future<void> verifyStatusRequest() async{
+    if (_requisicaoActive == null) {
+        _errorMessage = "erro ao buscar dados da requisição";
+        _requisicaoActive = Requisicao.empty();
+        return;
+      }
+
+    switch (_requisicaoActive!.status) {
+      case Status.A_CAMINHO:{
+             _textButtonExibithion ='Cheguei no local do passageiro' ;        
+            _onActionRequest = (){
+               final updateStatus= _requisicaoActive!.copyWith(status: Status.EM_VIAGEM);
+               _requisicaoActive = updateStatus;
+            };
+              break;
+         }
+       case Status.EM_VIAGEM: {
+            _textButtonExibithion ='Finalizar Corrida' ;
+           
+            _onActionRequest  = (){
+                _requisicaoActive  = _requisicaoActive!.copyWith(status: Status.FINALIZADO);
+            };
+           break;
+        } 
+       case Status.FINALIZADO: {
+            _textButtonExibithion ='Encerrado' ;
+            _onActionRequest  = (){
+                 
+            };
+       } 
+       case Status.CANCELADA: {
+            _textButtonExibithion ='Corrida Cancelada' ;
+            _onActionRequest  = (){};
+       } 
+
+      
+
+        
+        break;
+      default:
+    }
+
+ }
+
   @action
-  Future<void> showLocationsOnMap() async {
+  Future<void> initTripWithPassanger()async{
+       
+      
+  }
+
+
+
+
+
+  Future<void> finishRequest() async{
+    _textButtonExibithion ='Finalizar Corrida';
+    /// mostrar valores recebidos
+    /// exibir botao para sair da  tela
+  }
+  @action
+  Future<void> _showLocationsOnMap(Requisicao request) async {
     _errorMessage = null;
     try {
-      if (_requisicaoActive == null) {
-        throw RequisicaoException(
-            message: 'erro ao buscar dados da requisição');
-      }
+     
       final addressOrigem = Address(
           bairro: "",
           cep: "",
           cidade: "",
-          latitude: _requisicaoActive!.passageiro.latitude,
-          longitude: _requisicaoActive!.passageiro.longitude,
+          latitude: request.motorista!.latitude,
+          longitude: request.motorista!.longitude,
           nomeDestino: "",
           numero: "",
           rua: "");
 
-      final destino = _requisicaoActive!.destino;
-      await _traceRouter(addressOrigem, destino);
+        final addressDestino = Address(
+          bairro: "",
+          cep: "",
+          cidade: "",
+          latitude: request.passageiro.latitude,
+          longitude: request.passageiro.longitude,
+          nomeDestino: "",
+          numero: "",
+          rua: "");  
+
+     
+      await _traceRouter(addressOrigem, addressDestino);
 
       final markerOne = await _addMarkersOnMap(
           addressOrigem,
-          '${UberDriveConstants.PATH_IMAGE}passageiro.png',
+          '${UberDriveConstants.PATH_IMAGE}carro.png',
           'position1',
-          'passageiro');
+          'meu');
 
       final markerTwo = await _addMarkersOnMap(
-          destino,
-          '${UberDriveConstants.PATH_IMAGE}destination2.png',
+          addressDestino,
+          '${UberDriveConstants.PATH_IMAGE}passageiro.png',
           'position2',
-          'destination');
+          'passageiro');
      
       _markers.addAll([markerOne, markerTwo]);
 
       _mapsCameraService.moverCameraBound(
-          addressOrigem, destino, 120, controler);
+          addressOrigem, addressDestino, 120, controler);
+
     } on AddresException catch (e, s) {
-      throw RequisicaoException(message: e.message, stackTrace: s);
+      throw RequestException(message: e.message, stackTrace: s);
     }
   }
-
+  
+  
   Future<Marker> _addMarkersOnMap(Address fistAddress, String pathImage,
-      String idMarcador, String tiuloLocal) async {
+      String idMarcador, String tituloLocal) async {
     final pathImageIconOne =
         await _locationServiceImpl.markerPositionIconCostomizer(pathImage, 200,null);
     return _locationServiceImpl.createLocationMarker(
@@ -188,14 +286,14 @@ abstract class TripControllerBase with Store {
         fistAddress.longitude,
         pathImageIconOne,
         idMarcador,
-        tiuloLocal,
+        tituloLocal,
         BitmapDescriptor.hueBlue);
   }
 
   Future<void> _traceRouter(Address firstAddres, Address secondAdress) async {
-    try {
-      const apiKey =
-         "";
+    try {    
+
+      const apiKey =UberDriveConstants.MAPS_KEY ;
       _polynesRouter = <Polyline>{};
       if (_requisicaoActive != null) {
         final polylinesData = await _tripService.getRoute(
@@ -216,10 +314,5 @@ abstract class TripControllerBase with Store {
       throw AddresException(message: 'erro desconhecido', stackTrace: s);
     }
   }
-}
 
-/* 
- final dataToUpdate =  {
-        'motorista': request.motorista!.toMap(),
-        'status': request.status,
-      } ; */
+}

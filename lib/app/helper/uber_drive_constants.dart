@@ -18,7 +18,10 @@ class UberDriveConstants {
   // ignore: constant_identifier_names
   static const TRIP_PAGE_NAME ='${UberDriveConstants.HOME_MODULE_ROUTER_NAME}/Init${UberDriveConstants.TRIP_MODULE_ROUTER_NAME}/corrida';
  
+   static const MAPS_KEY = String.fromEnvironment('GOOGLE_KEY',defaultValue: 'No ontent');
  
+   
+   
  
   static const PATH_IMAGE ='assets/images/';
    

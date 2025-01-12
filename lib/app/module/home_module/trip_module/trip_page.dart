@@ -6,11 +6,13 @@ import 'package:mobx/mobx.dart';
 import 'package:uber_clone_core/uber_clone_core.dart';
 import 'package:uber_clone_driver/app/helper/uber_drive_constants.dart';
 import 'package:uber_clone_driver/app/module/home_module/trip_module/trip_controller.dart';
+
 class TripPage extends StatefulWidget {
   final TripController _controller;
 
-  const TripPage({super.key ,required TripController  tripController}) :_controller = tripController ;
-  
+  const TripPage({super.key, required TripController tripController})
+      : _controller = tripController;
+
   @override
   State<TripPage> createState() => _TripPageState();
 }
@@ -26,13 +28,13 @@ class _TripPageState extends State<TripPage> with DialogLoader {
   }
 
   initReactions() async {
-      final reactionDisposerMessage = reaction<String?>(
-        (_) => widget._controller.errorMessage, (messager) {
+    final reactionDisposerMessage =
+        reaction<String?>((_) => widget._controller.errorMessage, (messager) {
       if (messager != null) {
         callSnackBar(messager);
       }
     });
-    
+
     final serviceEnableReaction = reaction<bool>(
         (_) => widget._controller.isServiceEnable, (isServiceEnable) {
       if (!isServiceEnable) {
@@ -55,11 +57,12 @@ class _TripPageState extends State<TripPage> with DialogLoader {
 
     final requisiaoRection = reaction<Requisicao?>(
         (_) => widget._controller.requisicaoActive, (requisicao) {
-               if (requisicao == null || requisicao.id!.isEmpty) {
-                    Navigator.of(context).pushNamedAndRemoveUntil(UberDriveConstants.HOME_PAGE_NAME, (_)=>false);
-               }
-           
-          /*  showInfoRequistionDialog(
+      if (requisicao == null || requisicao.id!.isEmpty) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+            UberDriveConstants.HOME_PAGE_NAME, (_) => false);
+      }
+
+      /*  showInfoRequistionDialog(
             requisicao,
             () {
                hideLoader();
@@ -69,38 +72,43 @@ class _TripPageState extends State<TripPage> with DialogLoader {
             );  */
     });
 
-    listReactions.addAll([locationPermissionReaction, serviceEnableReaction,requisiaoRection,reactionDisposerMessage]);
+    listReactions.addAll([
+      locationPermissionReaction,
+      serviceEnableReaction,
+      requisiaoRection,
+      reactionDisposerMessage
+    ]);
   }
 
   @override
-  Widget build(BuildContext context) { 
-   final requisicao  = ModalRoute.of(context)!.settings.arguments as Requisicao;
-   
-   widget._controller.initActivetedTrip(requisicao); 
+  Widget build(BuildContext context) {
+    final requisicao = ModalRoute.of(context)!.settings.arguments as Requisicao;
 
-   final theme = Theme.of(context);
+    widget._controller.initActivetedRequest(requisicao);
+
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title:  Text("Corrida em andamento ${requisicao.passageiro.nome}",
-    
-         ),
+        title: Text(
+          "Corrida em andamento ${requisicao.passageiro.nome}",
+        ),
       ),
       body: Container(
           padding: const EdgeInsets.all(2),
           child: Stack(
             children: <Widget>[
-              Observer(
-                builder: (context) {
-                  return GoogleMap(
-                    markers: widget._controller.markers,
-                    polylines: widget._controller.polynesRouter,
-                    initialCameraPosition: widget._controller.cameraPosition ?? _cameraPositionViagem,
-                    mapType: MapType.normal,
-                    onMapCreated: _onMapCreated,
-                  );
-                }
-              ),
+              Observer(builder: (context) {
+                return GoogleMap(
+                  markers: widget._controller.markers,
+                  polylines: widget._controller.polynesRouter,
+                  initialCameraPosition: widget._controller.cameraPosition ??
+                      _cameraPositionViagem,
+                  mapType: MapType.normal,
+                  onMapCreated: _onMapCreated,
+                );
+              }),
               Positioned(
                   bottom: 20,
                   left: 0,
@@ -110,16 +118,24 @@ class _TripPageState extends State<TripPage> with DialogLoader {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(12)),
                             textStyle: const TextStyle(
                                 fontSize: 20, fontWeight: FontWeight.bold),
                             elevation: 5,
                             padding: const EdgeInsets.fromLTRB(32, 16, 32, 16)),
                         onPressed: () {
-                          Navigator.of(context).pushNamedAndRemoveUntil(UberDriveConstants.HOME_PAGE_NAME,(_) => false);
+                            widget._controller.onActionRequest();
+                            widget._controller.verifyStatusRequest();
                         },
-                        child: const Text('Finalizar'),
+                        child:Observer(
+                           builder:(_) {
+                              return   Text(
+                                  widget._controller.textButtonExibithion ??'',
+                                  style:theme.textTheme.titleLarge ,
+                              
+                             );
+                           }, 
+                          ),
                       )))
             ],
           )),
