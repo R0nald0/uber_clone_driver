@@ -8,7 +8,9 @@
             "name": "uber_clone_driver",
             "request": "launch",
             "type": "dart",
-            
+            "args": [
+                "--dart-define=GOOGLE_KEY=",
+            ]
         },
         {
             "name": "uber_clone_driver (profile mode)",

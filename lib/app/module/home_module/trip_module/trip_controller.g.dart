@@ -9,6 +9,24 @@ part of 'trip_controller.dart';
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic, no_leading_underscores_for_local_identifiers
 
 mixin _$TripController on TripControllerBase, Store {
+  late final _$_opacityAtom =
+      Atom(name: 'TripControllerBase._opacity', context: context);
+
+  double? get opacity {
+    _$_opacityAtom.reportRead();
+    return super._opacity;
+  }
+
+  @override
+  double? get _opacity => opacity;
+
+  @override
+  set _opacity(double? value) {
+    _$_opacityAtom.reportWrite(value, super._opacity, () {
+      super._opacity = value;
+    });
+  }
+
   late final _$_locationPermissionAtom =
       Atom(name: 'TripControllerBase._locationPermission', context: context);
 
@@ -190,16 +208,6 @@ mixin _$TripController on TripControllerBase, Store {
         .run(() => super.initActivetedRequest(request));
   }
 
-  late final _$_driverOnTheWayToThePassengerAsyncAction = AsyncAction(
-      'TripControllerBase._driverOnTheWayToThePassenger',
-      context: context);
-
-  @override
-  Future<void> _driverOnTheWayToThePassenger() {
-    return _$_driverOnTheWayToThePassengerAsyncAction
-        .run(() => super._driverOnTheWayToThePassenger());
-  }
-
   late final _$verifyStatusRequestAsyncAction =
       AsyncAction('TripControllerBase.verifyStatusRequest', context: context);
 
@@ -209,22 +217,22 @@ mixin _$TripController on TripControllerBase, Store {
         .run(() => super.verifyStatusRequest());
   }
 
-  late final _$initTripWithPassangerAsyncAction =
-      AsyncAction('TripControllerBase.initTripWithPassanger', context: context);
-
-  @override
-  Future<void> initTripWithPassanger() {
-    return _$initTripWithPassangerAsyncAction
-        .run(() => super.initTripWithPassanger());
-  }
-
   late final _$_showLocationsOnMapAsyncAction =
       AsyncAction('TripControllerBase._showLocationsOnMap', context: context);
 
   @override
-  Future<void> _showLocationsOnMap(Requisicao request) {
-    return _$_showLocationsOnMapAsyncAction
-        .run(() => super._showLocationsOnMap(request));
+  Future<void> _showLocationsOnMap(Address addressOrigem,
+      Address addressDestino, String destinationNameImge) {
+    return _$_showLocationsOnMapAsyncAction.run(() => super._showLocationsOnMap(
+        addressOrigem, addressDestino, destinationNameImge));
+  }
+
+  late final _$inTravelAsyncAction =
+      AsyncAction('TripControllerBase.inTravel', context: context);
+
+  @override
+  Future<void> inTravel() {
+    return _$inTravelAsyncAction.run(() => super.inTravel());
   }
 
   @override

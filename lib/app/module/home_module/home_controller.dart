@@ -21,7 +21,7 @@ abstract class HomeControllerBase with Store {
   final ITripSerivce _tripService;
   final IAppUberLog _log;
   final Completer<GoogleMapController> controler = Completer();
-
+  late  StreamSubscription<List<Requisicao>> _requestSubscription;
   
   late Marker markerOne;
   late Marker markerTwo;
@@ -227,7 +227,7 @@ abstract class HomeControllerBase with Store {
     _errorMessage = null;
     try {
       final requisicoesSt =  _requisitionService.findAndObserverTrips();
-      requisicoesSt.listen(
+    _requestSubscription = requisicoesSt.listen(
           (requisicaoList){
              if(requisicaoList.isEmpty){
              _requisicoes = [];
@@ -356,8 +356,8 @@ abstract class HomeControllerBase with Store {
   }
   Future<void> acceptedTrip(Requisicao request) async {
     try {
-      _requisicaoInfo = null;
-      _requisicaoActive = null;
+       _requisicaoInfo = null;
+       _requisicaoActive = null;
 
       if (_usuario == null ||
           _usuario!.idUsuario == null ||
@@ -386,9 +386,13 @@ abstract class HomeControllerBase with Store {
      });
 
      _requisicaoActive = requistionUpdated;
-    //TODO verificar se esta caindo no catch
+
     } on RequestException catch (e) {
       _errorMessage = e.message;
     }
+  }
+
+  Future<void> dispose() async{
+      _requestSubscription.cancel();
   }
 }

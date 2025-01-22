@@ -28,9 +28,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with DialogLoader {
   var listReactions = <ReactionDisposer>[];
-  final UberDriveLifeCycle lifeCycle = UberDriveLifeCycle(onResumed: () {
-    //widget._homeController.getUserLocation;
-  });
+  final UberDriveLifeCycle lifeCycle = UberDriveLifeCycle(onResumed: () {});
 
   final CameraPosition _cameraPositionViagem =
       const CameraPosition(target: LatLng(-13.001478, -38.499390), zoom: 11);
@@ -55,11 +53,10 @@ class _HomePageState extends State<HomePage> with DialogLoader {
   }
 
   initReactions() async {
-
     final idUser = widget._auth.dataStringUser;
     if (idUser != null) {
       showLoaderDialog();
-        await widget._homeController.getUserData(idUser);
+      await widget._homeController.getUserData(idUser);
       hideLoader();
     }
     callMessager();
@@ -73,7 +70,7 @@ class _HomePageState extends State<HomePage> with DialogLoader {
     final locationPermissionReaction = reaction<LocationPermission?>(
         (_) => widget._homeController.locationPermission, (permission) {
       if (permission == LocationPermission.denied) {
-          dialogLocationPermissionDenied(() {
+        dialogLocationPermissionDenied(() {
           widget._homeController.getPermissionLocation();
         });
       } else if (permission == LocationPermission.deniedForever) {
@@ -82,28 +79,27 @@ class _HomePageState extends State<HomePage> with DialogLoader {
         });
       }
     });
-    
 
-  final requisiaoRection = autorun((_){
-       final requestActive = widget._homeController.requisicaoActive;
-       if (requestActive != null && requestActive.motorista != null) {
-           Navigator.of(context).pushNamedAndRemoveUntil(
-                  UberDriveConstants.TRIP_PAGE_NAME,
-                  arguments: requestActive,
-                  (_) => false);
-       }
-       
-    },);
+    final requisiaoRection = autorun(
+      (_) {
+        final requestActive = widget._homeController.requisicaoActive;
+        if (requestActive != null && requestActive.motorista != null) {
+          Navigator.of(context).pushNamedAndRemoveUntil(
+              UberDriveConstants.TRIP_PAGE_NAME,
+              arguments: requestActive,
+              (_) => false);
+        }
+      },
+    );
 
-
-  final requisiaoRectionInfo = reaction<Requisicao?>(
+    final requisiaoRectionInfo = reaction<Requisicao?>(
         (_) => widget._homeController.requisicaoInfo, (requisicaoInfo) {
       showInfoRequistionDialog(
         requisicaoInfo,
         () async {
           if (requisicaoInfo != null) {
             await widget._homeController.acceptedTrip(requisicaoInfo);
-           // hideLoader();
+            // hideLoader();
           }
         },
         () {
@@ -111,8 +107,12 @@ class _HomePageState extends State<HomePage> with DialogLoader {
         },
       );
     });
-    listReactions.addAll(
-        [locationPermissionReaction, serviceEnableReaction, requisiaoRection,requisiaoRectionInfo]);
+    listReactions.addAll([
+      locationPermissionReaction,
+      serviceEnableReaction,
+      requisiaoRection,
+      requisiaoRectionInfo
+    ]);
   }
 
   void showInfoRequistionDialog(Requisicao? requisicao,
@@ -228,7 +228,6 @@ class _HomePageState extends State<HomePage> with DialogLoader {
       initReactions();
     });
     super.initState();
-    //TODO IMPLEMENTAR CICLO DE VIDA PARA VERIFICAR SE O USUARIO DEU A PERMISSAO AO VOLTAR PAR O APP
   }
 
   @override
@@ -237,6 +236,7 @@ class _HomePageState extends State<HomePage> with DialogLoader {
       reactions();
     }
     WidgetsBinding.instance.removeObserver(lifeCycle);
+    widget._homeController.dispose();
     super.dispose();
   }
 

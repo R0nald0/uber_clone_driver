@@ -38,7 +38,7 @@ class _TripPageState extends State<TripPage> with DialogLoader {
     final serviceEnableReaction = reaction<bool>(
         (_) => widget._controller.isServiceEnable, (isServiceEnable) {
       if (!isServiceEnable) {
-        callSnackBar("Ativse sua localização");
+        callSnackBar("Ative sua localização");
       }
     });
 
@@ -57,20 +57,28 @@ class _TripPageState extends State<TripPage> with DialogLoader {
 
     final requisiaoRection = reaction<Requisicao?>(
         (_) => widget._controller.requisicaoActive, (requisicao) {
+     
       if (requisicao == null || requisicao.id!.isEmpty) {
         Navigator.of(context).pushNamedAndRemoveUntil(
             UberDriveConstants.HOME_PAGE_NAME, (_) => false);
       }
+        
+      if(requisicao!.status == Status.FINALIZADO){
+          showTripDialogValues(
+            requisicao.valorCorrida, 
+             () async{
+               await widget._controller.confirmedPayment();
+               
+             }
+            ); 
+      }
+      if(requisicao.status == Status.CONFIRMADA){
+         Navigator.of(context).pushNamedAndRemoveUntil(
+            UberDriveConstants.HOME_PAGE_NAME, (_) => false);
+      }
 
-      /*  showInfoRequistionDialog(
-            requisicao,
-            () {
-               hideLoader();
-               Navigator.of(context).pushNamedAndRemoveUntil(UberDriveConstants.TRIP_PAGE_NAME,arguments: requisicao,(_)=> false);     
-            },
-            () => widget._controller.getPermissionLocation(),
-            );  */
     });
+ 
 
     listReactions.addAll([
       locationPermissionReaction,
@@ -80,6 +88,22 @@ class _TripPageState extends State<TripPage> with DialogLoader {
     ]);
   }
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_){
+       initReactions();
+    });
+  }
+   
+  @override
+  void dispose() {
+    for (var element in listReactions) {
+      element();
+    }
+    widget._controller.dispose();
+    super.dispose();
+  } 
   @override
   Widget build(BuildContext context) {
     final requisicao = ModalRoute.of(context)!.settings.arguments as Requisicao;
@@ -92,7 +116,7 @@ class _TripPageState extends State<TripPage> with DialogLoader {
       appBar: AppBar(
         centerTitle: true,
         title: Text(
-          "Corrida em andamento ${requisicao.passageiro.nome}",
+          "A caminho de ${requisicao.destino.rua}",
         ),
       ),
       body: Container(
@@ -115,27 +139,36 @@ class _TripPageState extends State<TripPage> with DialogLoader {
                   right: 0,
                   child: Padding(
                       padding: const EdgeInsets.only(left: 60, right: 60),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(12)),
-                            textStyle: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
-                            elevation: 5,
-                            padding: const EdgeInsets.fromLTRB(32, 16, 32, 16)),
-                        onPressed: () {
-                            widget._controller.onActionRequest();
-                            widget._controller.verifyStatusRequest();
-                        },
-                        child:Observer(
-                           builder:(_) {
-                              return   Text(
-                                  widget._controller.textButtonExibithion ??'',
-                                  style:theme.textTheme.titleLarge ,
-                              
-                             );
-                           }, 
-                          ),
+                      child: AnimatedOpacity(
+
+                        duration: const Duration(milliseconds: 800),
+                        opacity:  widget._controller.opacity ?? 1,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(12)),
+                              textStyle: const TextStyle(
+                                  fontSize: 20, 
+                                  fontWeight: FontWeight.bold,
+                                  
+                                  ),
+                              elevation: 5,
+                              padding: const EdgeInsets.fromLTRB(32, 16, 32, 16)),
+                          onPressed: () {
+                              widget._controller.onActionRequest();
+                              widget._controller.verifyStatusRequest();
+                          },
+                          child:Observer(
+                             builder:(_) {
+                                return   Text(
+                                    widget._controller.textButtonExibithion ??'',
+                                    style:theme.textTheme.titleLarge?.copyWith(
+                                      color: Colors.white
+                                    ),
+                               );
+                             }, 
+                            ),
+                        ),
                       )))
             ],
           )),
