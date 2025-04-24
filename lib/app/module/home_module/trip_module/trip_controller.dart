@@ -15,7 +15,7 @@ class TripController = TripControllerBase with _$TripController;
 abstract class TripControllerBase with Store {
   final ILocationService _locationServiceImpl;
   final IRequistionService _requisitionService;
-  final IUserRepository _userRepository;
+  final IUserService _userService;
   final MapsCameraService _mapsCameraService;
   final ITripSerivce _tripService;
   final IAppUberLog _log;
@@ -24,13 +24,13 @@ abstract class TripControllerBase with Store {
   TripControllerBase(
       {required ILocationService locattionService,
       required IRequistionService requisitionService,
-      required IUserRepository userRepository,
+      required IUserService userService,
       required MapsCameraService mapsCameraService,
       required ITripSerivce tripService,
       required IAppUberLog log})
       : _requisitionService = requisitionService,
         _locationServiceImpl = locattionService,
-        _userRepository = userRepository,
+        _userService = userService,
         _mapsCameraService = mapsCameraService,
         _tripService = tripService,
         _log = log;
@@ -344,7 +344,7 @@ abstract class TripControllerBase with Store {
       await _requisitionService.updataDataRequisition(
           _requisicaoActive!, updatedRequest!.toMap());
       final isSuccess =
-          await _requisitionService.deleteAcvitedReuest(updatedRequest);
+          await _requisitionService.deleteAcvitedRequest(updatedRequest);
       if (isSuccess) {
         _requisicaoActive = null;
       }

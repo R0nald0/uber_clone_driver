@@ -6,6 +6,7 @@ import 'package:uber_clone_driver/app/module/home_module/home_controller.dart';
 import 'package:uber_clone_driver/app/module/home_module/home_page.dart';
 import 'package:uber_clone_driver/app/module/home_module/trip_module/trip_controller.dart';
 import 'package:uber_clone_driver/app/module/home_module/trip_module/trip_page.dart';
+import 'package:uber_clone_driver/app/module/profile_module/profile_module.dart';
 
 class HomeModule extends FlutterGetItModule {
   @override
@@ -17,10 +18,8 @@ class HomeModule extends FlutterGetItModule {
           name: '/Init',
           bindings: [
             Bind.lazySingleton((i) => AuthenticationController(authService: i())),
-           // Bind.lazySingleton((i) => LocationServiceImpl(locationRepositoryImpl: i(),log: i())),
             Bind.lazySingleton((i) => MapsCameraService()),
           ],
-          
           pages: [
             FlutterGetItPageRouter(
               name: '/homepage',
@@ -52,11 +51,10 @@ class HomeModule extends FlutterGetItModule {
                       Bind.lazySingleton((i) => TripController(
                         locattionService: i(),
                           requisitionService: i(),
-                          userRepository: i(),
+                          userService: i(),
                           mapsCameraService: i(),
                           tripService: i(),
                           log: i()
-
                       ))
                     ],
                     builder: (context) => TripPage(
@@ -64,7 +62,8 @@ class HomeModule extends FlutterGetItModule {
                      ),
                   ),
                 ],
-        )
+        ),
+          ProfileModule()
           ],
         )
       ];
