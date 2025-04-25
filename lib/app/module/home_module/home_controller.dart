@@ -16,7 +16,7 @@ class HomeController = HomeControllerBase with _$HomeController;
 abstract class HomeControllerBase with Store {
   final ILocationService _locationServiceImpl;
   final IRequistionService _requisitionService;
-  final IUserRepository _userRepository;
+  final IUserService _userService;
   final MapsCameraService _mapsCameraService;
   final ITripSerivce _tripService;
   final IAppUberLog _log;
@@ -29,13 +29,13 @@ abstract class HomeControllerBase with Store {
   HomeControllerBase(
       {required ILocationService locattionService,
       required IRequistionService requisitionRepository,
-      required IUserRepository userRepository,
+      required IUserService userRepository,
       required MapsCameraService mapsCameraService,
       required ITripSerivce tripService,
       required IAppUberLog log})
       : _requisitionService = requisitionRepository,
         _locationServiceImpl = locattionService,
-        _userRepository = userRepository,
+        _userService = userRepository,
         _mapsCameraService = mapsCameraService,
         _tripService = tripService,
         _log = log;
@@ -210,7 +210,7 @@ abstract class HomeControllerBase with Store {
   Future<void> getUserData(idUser) async {
     _errorMessage = null;
     try {
-      final user = await _userRepository.getDataUserOn(idUser);
+      final user = await _userService.getDataUserOn(idUser);
       if (user == null) {
         _errorMessage = "erro ao recuperar dados do usuario";
       }
@@ -368,7 +368,7 @@ abstract class HomeControllerBase with Store {
 
        final updatedUsuario = _usuario!.copyWith(idRequisicaoAtiva: request.id);
       
-       final isSuccess  = await _userRepository.updateUser(updatedUsuario);
+       final isSuccess  = await _userService.updateUser(updatedUsuario);
         if(!isSuccess) {
            const message = 'Erro ao sincornizar dados,viagem não pode ser iniciada,tente novamente';
           _errorMessage = message ;

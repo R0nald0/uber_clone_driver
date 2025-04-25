@@ -45,6 +45,7 @@ class _HomePageState extends State<HomePage> with DialogLoader {
   _escolhaItem(String escolha) {
     switch (escolha) {
       case "Configurações":
+        Navigator.pushNamed(context, UberDriveConstants.PROFILE_PAGE_NAME);
         break;
       case "Deslogar":
         deslogarUsuario();

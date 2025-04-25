@@ -17,7 +17,7 @@ void main() async {
       SplashScreenModule(),
       HomeModule(),
       RegisterModule(),
-   
+      
     ],
   ));
 }

@@ -6,7 +6,7 @@
    
     <application
         android:label="uber_clone_driver"
-        android:name="${applicationName}"
+       
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
@@ -38,7 +38,7 @@
             android:name="flutterEmbedding"
             android:value="2" />
           <meta-data android:name="com.google.android.geo.API_KEY"
-           android:value=""/>  
+           android:value="${maps_Api_key}"/>  
                           
     </application>
     <!-- Required to query activities that can process text, see:
