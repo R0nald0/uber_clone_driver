@@ -4,8 +4,6 @@ import 'package:uber_clone_driver/app/helper/uber_drive_constants.dart';
 import 'package:uber_clone_driver/app/module/auth/controller/authentication_controller.dart';
 import 'package:uber_clone_driver/app/module/home_module/home_controller.dart';
 import 'package:uber_clone_driver/app/module/home_module/home_page.dart';
-import 'package:uber_clone_driver/app/module/home_module/trip_module/trip_controller.dart';
-import 'package:uber_clone_driver/app/module/home_module/trip_module/trip_page.dart';
 import 'package:uber_clone_driver/app/module/profile_module/profile_module.dart';
 
 class HomeModule extends FlutterGetItModule {
@@ -19,6 +17,7 @@ class HomeModule extends FlutterGetItModule {
           bindings: [
             Bind.lazySingleton((i) => AuthenticationController(authService: i())),
             Bind.lazySingleton((i) => MapsCameraService()),
+            Bind.lazySingleton((i) => FirebaseNotfication()),
           ],
           pages: [
             FlutterGetItPageRouter(
@@ -41,28 +40,7 @@ class HomeModule extends FlutterGetItModule {
               ),
             ),
 
-            FlutterGetItModuleRouter(
-                name: UberDriveConstants.TRIP_MODULE_ROUTER_NAME,
-                bindings: []  ,
-                pages: [
-                  FlutterGetItPageRouter(
-                    name:'/corrida'  ,
-                    bindings: [
-                      Bind.lazySingleton((i) => TripController(
-                        locattionService: i(),
-                          requisitionService: i(),
-                          userService: i(),
-                          mapsCameraService: i(),
-                          tripService: i(),
-                          log: i()
-                      ))
-                    ],
-                    builder: (context) => TripPage(
-                      tripController: context.get<TripController>(),
-                     ),
-                  ),
-                ],
-        ),
+            
           ProfileModule()
           ],
         )

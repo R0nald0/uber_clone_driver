@@ -19,24 +19,26 @@ abstract class TripControllerBase with Store {
   final MapsCameraService _mapsCameraService;
   final ITripSerivce _tripService;
   final IAppUberLog _log;
+
   final Completer<GoogleMapController> controler = Completer();
 
-  TripControllerBase(
-      {required ILocationService locattionService,
-      required IRequistionService requisitionService,
-      required IUserService userService,
-      required MapsCameraService mapsCameraService,
-      required ITripSerivce tripService,
-      required IAppUberLog log})
-      : _requisitionService = requisitionService,
+  TripControllerBase({
+    required ILocationService locattionService,
+    required IRequistionService requisitionService,
+    required IUserService userService,
+    required MapsCameraService mapsCameraService,
+    required ITripSerivce tripService,
+    required IAppUberLog log,
+  })  : _requisitionService = requisitionService,
         _locationServiceImpl = locattionService,
         _userService = userService,
         _mapsCameraService = mapsCameraService,
         _tripService = tripService,
         _log = log;
 
-  late StreamSubscription<Requisicao> requestSubsCription;
-  late StreamSubscription<UserPosition> userPositionSubscription;
+  StreamSubscription<Requisicao>? requestSubsCription;
+  StreamSubscription<UserPosition>? userPositionSubscription;
+  StreamSubscription<UberMessanger>? notificatioSubscription;
 
   @readonly
   double? _opacity = 1;
@@ -67,6 +69,9 @@ abstract class TripControllerBase with Store {
 
   @readonly
   Function _onActionRequest = () {};
+
+  @readonly
+  RequestState? _requestState = RequestState.nao_chamado;
 
   @action
   Future<void> getPermissionLocation() async {
@@ -125,7 +130,16 @@ abstract class TripControllerBase with Store {
 
         await _updatePositions();
         await verifyStatusRequest();
-      });
+        if (_requisicaoActive?.status != data.status) {
+          await _requisitionService.updataDataRequisition(data);
+        }
+      },
+      onError: (_){
+         
+         _requisicaoActive = Requisicao.empty();
+         _requisitionService.deleteAcvitedRequest(request);
+      }
+      );
     } on RequestException catch (e) {
       _errorMessage = e.message;
       _requisicaoActive = Requisicao.empty();
@@ -135,19 +149,18 @@ abstract class TripControllerBase with Store {
 
   Future<void> _updatePositions() async {
     try {
-      var userPosition = _locationServiceImpl.getUserRealTimeLocation();
-      _textButtonExibithion = 'Cheguei no local do passageiro';
-
-      userPositionSubscription = userPosition.listen((data) async {
-        final latitude = data.latitude;
-        final longitude = data.longitude;
+      userPositionSubscription =
+          _locationServiceImpl.getUserRealTimeLocation().listen((data) async {
+        final UserPosition(:latitude, :longitude) = data;
 
         final updatedUsuario = _requisicaoActive!.motorista!
             .copyWith(latitude: latitude, longitude: longitude);
-        _requisicaoActive =
+
+        final requestUpdated =
             _requisicaoActive!.copyWith(motorista: updatedUsuario);
 
-        await _requisitionService.updateDataTripOn(_requisicaoActive!);
+        _requisicaoActive = requestUpdated;
+        await _requisitionService.updateDataTripOn(requestUpdated);
       });
     } on RequestException catch (e) {
       _errorMessage = e.message;
@@ -164,48 +177,67 @@ abstract class TripControllerBase with Store {
       return;
     }
 
-    switch (_requisicaoActive!.status) {
-      case Status.A_CAMINHO:
+    switch (_requisicaoActive?.status) {
+      case RequestState.a_caminho:
         {
-          _textButtonExibithion = 'Cheguei no local do passageiro';
-          _driverOnTheWayToThePassenger();
+          await _driverOnTheWayToThePassenger(_requisicaoActive!);
           _onActionRequest = () {
             final updateStatus =
-                _requisicaoActive!.copyWith(status: Status.EM_VIAGEM);
+                _requisicaoActive!.copyWith(status: RequestState.em_viagem);
             _requisicaoActive = updateStatus;
           };
           break;
         }
-      case Status.EM_VIAGEM:
+      case RequestState.em_viagem:
         {
-          inTravel();
-          _textButtonExibithion = 'Finalizar';
-
-          _onActionRequest = finishRequest;
+          inTravelToDestiny(_requisicaoActive!);
+          _onActionRequest = () {
+            final updateStatus =
+                _requisicaoActive!.copyWith(status: RequestState.finalizado);
+            _requisicaoActive = updateStatus;
+          };
           break;
         }
-      case Status.FINALIZADO:
+      case RequestState.finalizado:
         {
+          finishRequest(_requisicaoActive!);
           _onActionRequest = () {
             confirmedPayment();
           };
           break;
         }
-      case Status.CANCELADA:
+      case RequestState.cancelado:
         {
           _textButtonExibithion = 'Corrida Cancelada';
           _onActionRequest = () {};
         }
-
       default:
     }
   }
 
-  Future<void> finishRequest() async {
+  Future<void> finishRequest(Requisicao request) async {
+    _textButtonExibithion = '';
+    _requestState = RequestState.finalizado;
     final updateRequest =
-        _requisicaoActive!.copyWith(status: Status.FINALIZADO);
+        _requisicaoActive!.copyWith(status: RequestState.finalizado);
     _requisicaoActive = updateRequest;
-    showButton();
+
+    final Usuario(latitude: motoristaLatitude, longitude: motoristaLongitude) =
+        request.motorista!;
+    final Address(latitude: destinoLatitude, longitude: destinoLogitude) =
+        request.destino;
+
+    final addressOrigem = Address.emptyAddres()
+        .copyWith(latitude: motoristaLatitude, longitude: motoristaLongitude);
+    final addressDestino = Address.emptyAddres()
+        .copyWith(latitude: destinoLatitude, longitude: destinoLogitude);
+
+    await _showLocationsOnMap(addressOrigem, addressDestino,
+        '${UberDriveConstants.PATH_IMAGE}destination2.png');
+
+    await _requisitionService.updataDataRequisition(_requisicaoActive!);
+    await _traceRouter(addressOrigem, addressDestino);
+    _showButton();
 
     /// mostrar valores recebidos
     /// exibir botao para sair da  tela
@@ -218,16 +250,16 @@ abstract class TripControllerBase with Store {
     String destinationNameImge,
   ) async {
     _errorMessage = null;
+    _markers = {};
     try {
-      await _traceRouter(addressOrigem, addressDestino);
-
       final markerOne = await _addMarkersOnMap(addressOrigem,
           '${UberDriveConstants.PATH_IMAGE}carro.png', 'position1', 'meu');
 
       final markerTwo = await _addMarkersOnMap(
           addressDestino, destinationNameImge, 'position2', 'passageiro');
 
-      _markers.addAll([markerOne, markerTwo]);
+      _markers.add(markerOne);
+      _markers.add(markerTwo);
 
       _mapsCameraService.moverCameraBound(
           addressOrigem, addressDestino, 120, controler);
@@ -236,6 +268,7 @@ abstract class TripControllerBase with Store {
     }
   }
 
+  @action
   Future<Marker> _addMarkersOnMap(Address fistAddress, String pathImage,
       String idMarcador, String tituloLocal) async {
     final pathImageIconOne = await _locationServiceImpl
@@ -274,80 +307,74 @@ abstract class TripControllerBase with Store {
   }
 
   @action
-  Future<void> inTravel() async {
-    final addressOrigem = Address(
-        bairro: "",
-        cep: "",
-        cidade: "",
-        latitude: _requisicaoActive!.motorista!.latitude,
-        longitude: _requisicaoActive!.motorista!.longitude,
-        nomeDestino: "",
-        numero: "",
-        rua: "");
+  Future<void> inTravelToDestiny(Requisicao request) async {
+    _requestState = RequestState.a_caminho;
+    _textButtonExibithion = 'Finalizar';
 
-    final addressDestino = Address(
-        bairro: "",
-        cep: "",
-        cidade: "",
-        latitude: _requisicaoActive!.destino.latitude,
-        longitude: _requisicaoActive!.destino.longitude,
-        nomeDestino: "",
-        numero: "",
-        rua: "");
+    final Usuario(latitude: motoristaLatitude, longitude: motoristaLongitude) =
+        request.motorista!;
+    final Address(latitude: destinoLatitude, longitude: destinoLogitude) =
+        request.destino;
+
+    final addressOrigem = Address.emptyAddres()
+        .copyWith(latitude: motoristaLatitude, longitude: motoristaLongitude);
+    final addressDestino = Address.emptyAddres()
+        .copyWith(latitude: destinoLatitude, longitude: destinoLogitude);
 
     await _showLocationsOnMap(addressOrigem, addressDestino,
         '${UberDriveConstants.PATH_IMAGE}destination2.png');
-    await _requisitionService.updataDataRequisition(
-        _requisicaoActive!, _requisicaoActive!.toMap());
+    await _requisitionService.updataDataRequisition(_requisicaoActive!);
+    await _traceRouter(addressOrigem, addressDestino);
   }
 
-  Future<void> _driverOnTheWayToThePassenger() async {
-    final addressOrigem = Address(
-        bairro: "",
-        cep: "",
-        cidade: "",
-        latitude: _requisicaoActive!.motorista!.latitude,
-        longitude: _requisicaoActive!.motorista!.longitude,
-        nomeDestino: "",
-        numero: "",
-        rua: "");
+  Future<void> _driverOnTheWayToThePassenger(Requisicao request) async {
+    _textButtonExibithion = 'Iniciar Viagem';
+    _requestState = RequestState.a_caminho;
 
-    final addressDestino = Address(
-        bairro: "",
-        cep: "",
-        cidade: "",
-        latitude: _requisicaoActive!.passageiro.latitude,
-        longitude: _requisicaoActive!.passageiro.longitude,
-        nomeDestino: "",
-        numero: "",
-        rua: "");
+    final Usuario(:latitude, :longitude) = request.passageiro;
+    final Usuario(latitude: motoristaLatitude, longitude: motoristaLongitude) =
+        request.motorista!;
+
+    final addressOrigem = Address.emptyAddres()
+        .copyWith(latitude: motoristaLatitude, longitude: motoristaLongitude);
+    final addressDestino = Address.emptyAddres()
+        .copyWith(latitude: latitude, longitude: longitude);
 
     await _showLocationsOnMap(addressOrigem, addressDestino,
         '${UberDriveConstants.PATH_IMAGE}passageiro.png');
+    await _traceRouter(addressOrigem, addressDestino);
+    await _requisitionService.updataDataRequisition(request);
   }
 
-  void showButton() {
-    if (_requisicaoActive == null || _requisicaoActive!.status.isEmpty) {
+  void _showButton() {
+    if (_requisicaoActive == null ||
+        _requisicaoActive!.status == RequestState.nao_chamado) {
       return;
     }
-    if (_requisicaoActive!.status == Status.FINALIZADO) {
-      _opacity = 0.0;
+    if (_requisicaoActive!.status == RequestState.finalizado) {
+      _opacity = 0.5;
     }
   }
 
   Future<void> confirmedPayment() async {
     _errorMessage = null;
     try {
-      final updatedRequest =
-          _requisicaoActive?.copyWith(status: Status.CONFIRMADA);
-      _requisicaoActive = updatedRequest;
-      await _requisitionService.updataDataRequisition(
-          _requisicaoActive!, updatedRequest!.toMap());
-      final isSuccess =
-          await _requisitionService.deleteAcvitedRequest(updatedRequest);
-      if (isSuccess) {
-        _requisicaoActive = null;
+      _requestState = RequestState.pagamento_confirmado;
+      final request = _requisicaoActive?.copyWith(
+          status: RequestState.pagamento_confirmado);
+
+      if (request == null) {
+        _errorMessage = "Erro ao atualizar request";
       }
+      final upadtedRequest =
+          await _requisitionService.updataDataRequisition(request!);
+      final isSuccess =
+          await _requisitionService.deleteAcvitedRequest(upadtedRequest);
+      if (!isSuccess) {
+         throw RequestException(message: "Erroa limpar viagem ativar");
+      }
+       
+        _requisicaoActive = null;
     } on RequestException catch (e) {
       _errorMessage = e.message;
     } on UserException catch (e) {
@@ -355,8 +382,10 @@ abstract class TripControllerBase with Store {
     }
   }
 
+  Future<void> getMessgeBackGround() async {}
   void dispose() {
-    userPositionSubscription.cancel();
-    requestSubsCription.cancel();
+    notificatioSubscription?.cancel();
+    userPositionSubscription?.cancel();
+    requestSubsCription?.cancel();
   }
 }

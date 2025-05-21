@@ -21,7 +21,7 @@ abstract class HomeControllerBase with Store {
   final ITripSerivce _tripService;
   final IAppUberLog _log;
   final Completer<GoogleMapController> controler = Completer();
-  late  StreamSubscription<List<Requisicao>> _requestSubscription;
+    StreamSubscription<List<Requisicao>>? _requestSubscription;
   
   late Marker markerOne;
   late Marker markerTwo;
@@ -270,21 +270,17 @@ abstract class HomeControllerBase with Store {
   @action
   Future<void> showLocationsOnMap() async {
     _errorMessage = null;
+  
     try {
       if (_requisicaoInfo == null) {
         return;
       }
-      final addressOrigem = Address(
-          bairro: "",
-          cep: "",
-          cidade: "",
-          latitude: _requisicaoInfo!.passageiro.latitude,
-          longitude: _requisicaoInfo!.passageiro.longitude,
-          nomeDestino: "",
-          numero: "",
-          rua: "");
 
+       final Usuario(latitude:passengerLatitude,longitude:passengerLogitude) = _requisicaoInfo!.passageiro;       
+   
+      final addressOrigem = Address.emptyAddres().copyWith(latitude: passengerLatitude,longitude: passengerLogitude);
       final destino = _requisicaoInfo!.destino;
+
       await _traceRouter(addressOrigem, destino);
 
        markerOne = await _createMarker(
@@ -377,13 +373,10 @@ abstract class HomeControllerBase with Store {
 
        final updateRequest = request.copyWith(
              motorista: updatedUsuario, 
-             status: Status.A_CAMINHO
+             status: RequestState.a_caminho
              );
       
-     final requistionUpdated = await _requisitionService.updataDataRequisition(updateRequest,{
-       'status' : updateRequest.status,
-       'motorista' : updateRequest.motorista?.toMap()
-     });
+     final requistionUpdated = await _requisitionService.updataDataRequisition(updateRequest);
 
      _requisicaoActive = requistionUpdated;
 
@@ -393,6 +386,6 @@ abstract class HomeControllerBase with Store {
   }
 
   Future<void> dispose() async{
-      _requestSubscription.cancel();
+      _requestSubscription?.cancel();
   }
 }

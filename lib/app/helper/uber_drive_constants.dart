@@ -18,11 +18,11 @@ class UberDriveConstants {
   // ignore: constant_identifier_names
   static const HOME_PAGE_NAME ='${UberDriveConstants.HOME_MODULE_ROUTER_NAME}/Init/homepage';
   // ignore: constant_identifier_names
-  static const TRIP_PAGE_NAME ='${UberDriveConstants.HOME_MODULE_ROUTER_NAME}/Init${UberDriveConstants.TRIP_MODULE_ROUTER_NAME}/corrida';
+  static const TRIP_PAGE_NAME ='${UberDriveConstants.TRIP_MODULE_ROUTER_NAME}/Trip/corrida';
   
   static const PROFILE_PAGE_NAME ='${UberDriveConstants.HOME_MODULE_ROUTER_NAME}/Init${UberDriveConstants.PROFILE_MODULE_ROUTER_NAME}/profile';
  
-   static const MAPS_KEY = String.fromEnvironment('GOOGLE_KEY',defaultValue: 'No content');
+   static const MAPS_KEY = String.fromEnvironment('maps_key',defaultValue: 'No content');
  
   static const PATH_IMAGE ='assets/images/';
    

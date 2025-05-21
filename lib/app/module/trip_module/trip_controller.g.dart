@@ -190,6 +190,24 @@ mixin _$TripController on TripControllerBase, Store {
     });
   }
 
+  late final _$_requestStateAtom =
+      Atom(name: 'TripControllerBase._requestState', context: context);
+
+  RequestState? get requestState {
+    _$_requestStateAtom.reportRead();
+    return super._requestState;
+  }
+
+  @override
+  RequestState? get _requestState => requestState;
+
+  @override
+  set _requestState(RequestState? value) {
+    _$_requestStateAtom.reportWrite(value, super._requestState, () {
+      super._requestState = value;
+    });
+  }
+
   late final _$getPermissionLocationAsyncAction =
       AsyncAction('TripControllerBase.getPermissionLocation', context: context);
 
@@ -227,12 +245,23 @@ mixin _$TripController on TripControllerBase, Store {
         addressOrigem, addressDestino, destinationNameImge));
   }
 
-  late final _$inTravelAsyncAction =
-      AsyncAction('TripControllerBase.inTravel', context: context);
+  late final _$_addMarkersOnMapAsyncAction =
+      AsyncAction('TripControllerBase._addMarkersOnMap', context: context);
 
   @override
-  Future<void> inTravel() {
-    return _$inTravelAsyncAction.run(() => super.inTravel());
+  Future<Marker> _addMarkersOnMap(Address fistAddress, String pathImage,
+      String idMarcador, String tituloLocal) {
+    return _$_addMarkersOnMapAsyncAction.run(() => super
+        ._addMarkersOnMap(fistAddress, pathImage, idMarcador, tituloLocal));
+  }
+
+  late final _$inTravelToDestinyAsyncAction =
+      AsyncAction('TripControllerBase.inTravelToDestiny', context: context);
+
+  @override
+  Future<void> inTravelToDestiny(Requisicao request) {
+    return _$inTravelToDestinyAsyncAction
+        .run(() => super.inTravelToDestiny(request));
   }
 
   @override

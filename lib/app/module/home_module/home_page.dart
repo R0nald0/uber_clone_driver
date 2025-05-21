@@ -60,6 +60,7 @@ class _HomePageState extends State<HomePage> with DialogLoader {
       await widget._homeController.getUserData(idUser);
       hideLoader();
     }
+    
     callMessager();
     final serviceEnableReaction = reaction<bool>(
         (_) => widget._homeController.isServiceEnable, (isServiceEnable) {
@@ -83,7 +84,7 @@ class _HomePageState extends State<HomePage> with DialogLoader {
 
     final requisiaoRection = autorun(
       (_) {
-        final requestActive = widget._homeController.requisicaoActive;
+        final  requestActive = widget._homeController.requisicaoActive;
         if (requestActive != null && requestActive.motorista != null) {
           Navigator.of(context).pushNamedAndRemoveUntil(
               UberDriveConstants.TRIP_PAGE_NAME,
@@ -100,7 +101,6 @@ class _HomePageState extends State<HomePage> with DialogLoader {
         () async {
           if (requisicaoInfo != null) {
             await widget._homeController.acceptedTrip(requisicaoInfo);
-            // hideLoader();
           }
         },
         () {
@@ -261,15 +261,16 @@ class _HomePageState extends State<HomePage> with DialogLoader {
           Expanded(
             flex: 2,
             child: Padding(
-              padding: const EdgeInsets.all(2),
+              padding: const EdgeInsets.all(16),
               child: Observer(builder: (context) {
                 final listRequistions = widget._homeController.requisicoes;
                 return listRequistions.isEmpty
                     ? Center(
                         child: Text(
                           "Nenhuma Corrida ativa no momento,aguarde...",
+                          textAlign: TextAlign.center,
                           style: theme.textTheme.labelLarge
-                              ?.copyWith(fontSize: 18),
+                              ?.copyWith(fontSize: 18,fontWeight: FontWeight.bold),
                         ),
                       )
                     : ListView.builder(
