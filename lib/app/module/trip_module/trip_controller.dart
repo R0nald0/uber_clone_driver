@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
@@ -19,22 +20,28 @@ abstract class TripControllerBase with Store {
   final MapsCameraService _mapsCameraService;
   final ITripSerivce _tripService;
   final IAppUberLog _log;
+  final IPaymentService _paymentService;
+  
 
   final Completer<GoogleMapController> controler = Completer();
 
-  TripControllerBase({
-    required ILocationService locattionService,
-    required IRequistionService requisitionService,
-    required IUserService userService,
-    required MapsCameraService mapsCameraService,
-    required ITripSerivce tripService,
-    required IAppUberLog log,
-  })  : _requisitionService = requisitionService,
+  TripControllerBase(
+      {required ILocationService locattionService,
+      required IRequistionService requisitionService,
+      required IUserService userService,
+      required MapsCameraService mapsCameraService,
+      required ITripSerivce tripService,
+      required IAppUberLog log,
+      required IPaymentService paymentService,
+    
+      req})
+      : _requisitionService = requisitionService,
         _locationServiceImpl = locattionService,
         _userService = userService,
         _mapsCameraService = mapsCameraService,
         _tripService = tripService,
-        _log = log;
+        _log = log,
+        _paymentService = paymentService;
 
   StreamSubscription<Requisicao>? requestSubsCription;
   StreamSubscription<UserPosition>? userPositionSubscription;
@@ -133,13 +140,10 @@ abstract class TripControllerBase with Store {
         if (_requisicaoActive?.status != data.status) {
           await _requisitionService.updataDataRequisition(data);
         }
-      },
-      onError: (_){
-         
-         _requisicaoActive = Requisicao.empty();
-         _requisitionService.deleteAcvitedRequest(request);
-      }
-      );
+      }, onError: (_) {
+        _requisicaoActive = Requisicao.empty();
+        _requisitionService.deleteAcvitedRequest(request);
+      });
     } on RequestException catch (e) {
       _errorMessage = e.message;
       _requisicaoActive = Requisicao.empty();
@@ -359,27 +363,83 @@ abstract class TripControllerBase with Store {
   Future<void> confirmedPayment() async {
     _errorMessage = null;
     try {
+
+      final isPayment = await _finishiPayment(_requisicaoActive!);
+      
+      if(!isPayment){
+          return;
+      }
+
       _requestState = RequestState.pagamento_confirmado;
+
+       final Requisicao(:motorista,:passageiro,:valorCorrida) = _requisicaoActive!;
+       
+       final newBalanceDriver  = motorista!.balance + Decimal.parse(valorCorrida.changeCommaToDot()) ;
+       final newBalancePassanger  = passageiro.balance - Decimal.parse(valorCorrida.changeCommaToDot());
+
       final request = _requisicaoActive?.copyWith(
-          status: RequestState.pagamento_confirmado);
+          status: RequestState.pagamento_confirmado,
+          motorista:motorista.copyWith(balance:newBalanceDriver ),
+          passageiro: passageiro.copyWith(balance: newBalancePassanger) 
+          );
 
       if (request == null) {
-        _errorMessage = "Erro ao atualizar request";
+        _errorMessage = "Erro ao atualizar dados da viagem";
       }
+  
       final upadtedRequest =
           await _requisitionService.updataDataRequisition(request!);
+
       final isSuccess =
           await _requisitionService.deleteAcvitedRequest(upadtedRequest);
+    
       if (!isSuccess) {
-         throw RequestException(message: "Erroa limpar viagem ativar");
+        throw RequestException(message: "Erro ao limpar viagem ativa");
       }
-       
-        _requisicaoActive = null;
+
+      ServiceNotificationImpl().showNotification(
+        title: "Corrida Finalizada", 
+         body: 'Você Recebeu R\$${request.valorCorrida} por está viagem',
+        );
+      _requisicaoActive = null;
     } on RequestException catch (e) {
       _errorMessage = e.message;
     } on UserException catch (e) {
       _errorMessage = e.message;
     }
+  }
+
+  Future<bool> _finishiPayment(Requisicao updateRequest) async {
+    try {
+      if (updateRequest.motorista == null || updateRequest.passageiro.idUsuario == null) {
+         return false;
+      }  
+
+      final data = (
+        paymentType: updateRequest.paymentType,
+        recipientId: updateRequest.motorista!.idUsuario!,
+        senderId: updateRequest.passageiro.idUsuario!,
+        value:updateRequest.valorCorrida
+      );
+     
+     return await _paymentService.startPaymentTrip(data);
+    } on UserNotFound {
+      _showErrorMessage(UserNotFound.codeExcpetion.toString());
+    } on PaymentException catch(e) {
+      _showErrorMessage( e.message);
+    } on RequestException catch (e) {
+      _showErrorMessage(e.message);
+    } on UserException catch (e) {
+      _showErrorMessage(e.message ?? "Erro nos dados para pagamento");
+    
+    }
+    return false;
+  }
+
+  void _showErrorMessage(String errorMessage) {
+    _errorMessage = null;
+    _errorMessage = errorMessage;
+    
   }
 
   Future<void> getMessgeBackGround() async {}

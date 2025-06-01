@@ -39,7 +39,7 @@ dependencies:
   geocoding:  ^3.0.0
   geolocator: ^12.0.0 
   flutter_polyline_points: ^2.1.0
-  intl: ^0.19.0
+  intl: ^0.20.2
   firebase_core: ^3.3.0
   cloud_firestore: ^5.2.1
   mobx: ^2.3.3+2
@@ -47,6 +47,8 @@ dependencies:
   flutter_getit: ^3.0.1
   flutter_dotenv: ^5.1.0
   validatorless: ^1.2.3
+  decimal: ^3.2.1
+  
   
   uber_clone_core:
    path: ../uber_clone_core
@@ -85,6 +87,7 @@ flutter:
      - assets/images/destination2.png
      - assets/images/passageiro.png
      - assets/images/carro.png
+     - assets/images/uber_car.jpg
      - assets/images/uber_drive_logo.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg

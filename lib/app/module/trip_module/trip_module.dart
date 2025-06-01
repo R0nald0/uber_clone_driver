@@ -24,7 +24,8 @@ class TripModule extends FlutterGetItModule{
                           userService: i(),
                           mapsCameraService: i(),
                           tripService: i(),
-                          log: i()
+                          log: i(),
+                          paymentService: i() ,
                       ))
                     ],
                     builder: (context) => TripPage(

@@ -65,7 +65,7 @@ class _HomePageState extends State<HomePage> with DialogLoader {
     final serviceEnableReaction = reaction<bool>(
         (_) => widget._homeController.isServiceEnable, (isServiceEnable) {
       if (!isServiceEnable) {
-        callSnackBar("Ativse sua localização");
+        callInfoSnackBar("Ativse sua localização");
       }
     });
 
@@ -215,6 +215,9 @@ class _HomePageState extends State<HomePage> with DialogLoader {
     final reactionDisposerMessage = reaction<String?>(
         (_) => widget._homeController.errorMessage, (messager) {
       if (messager != null) {
+         if(messager == UserNotFound.codeExcpetion.toString()){
+            Navigator.of(context).pushNamedAndRemoveUntil(UberDriveConstants.LOGIN_PAGE_NAME,(_)=> false)  ;    
+         }
         callSnackBar(messager);
       }
     });

@@ -21,8 +21,8 @@ abstract class HomeControllerBase with Store {
   final ITripSerivce _tripService;
   final IAppUberLog _log;
   final Completer<GoogleMapController> controler = Completer();
-    StreamSubscription<List<Requisicao>>? _requestSubscription;
-  
+  StreamSubscription<List<Requisicao>>? _requestSubscription;
+
   late Marker markerOne;
   late Marker markerTwo;
 
@@ -75,22 +75,27 @@ abstract class HomeControllerBase with Store {
 
   @action
   Future<void> findRequisitionActive() async {
-       if(_usuario  == null  ){
-          _errorMessage  =" Erro ao buscar dados do usuairo";
-          //deslogar e mandar para login page
-          return;
-       }
+    try {
+      if (_usuario == null) {
+        _errorMessage = " Erro ao buscar dados do usuairo";
+        //deslogar e mandar para login page
+        return;
+      }
 
-       if (_usuario!.idRequisicaoAtiva!.isEmpty) {
-            findTrips();
-            return;
-       }
-      
-        _requisicaoActive = null;
-        
-      final activetedRequisition = await _requisitionService.verfyActivatedRequisition(_usuario!.idRequisicaoAtiva!);
+      if (_usuario!.idRequisicaoAtiva!.isEmpty) {
+        findTrips();
+        return;
+      }
+
+      _requisicaoActive = null;
+
+      final activetedRequisition = await _requisitionService
+          .verfyActivatedRequisition(_usuario!.idRequisicaoAtiva!);
       _requisicaoActive = activetedRequisition;
-
+    } on UserNotFound catch (e) {
+      _errorMessage = null;
+      _errorMessage = UserNotFound.codeExcpetion.toString();    
+    } 
   }
 
   @action
@@ -145,7 +150,7 @@ abstract class HomeControllerBase with Store {
       case LocationPermission.unableToDetermine:
         break;
     }
-    
+
     await getUserLocation();
   }
 
@@ -164,16 +169,15 @@ abstract class HomeControllerBase with Store {
     final user = _usuario!.copyWith(
         latitude: actualPosition.latitude, longitude: actualPosition.longitude);
 
-   final  myMarkerLocal   = await _createMarker(
-    user.latitude,
-    user.longitude,
-    '${UberDriveConstants.PATH_IMAGE}carro.png' ,
-     "my_local", 
-     'meu local',
-     const Size(45,45)
-     );
+    final myMarkerLocal = await _createMarker(
+        user.latitude,
+        user.longitude,
+        '${UberDriveConstants.PATH_IMAGE}carro.png',
+        "my_local",
+        'meu local',
+        const Size(45, 45));
 
-       _markers.add(myMarkerLocal);
+    _markers.add(myMarkerLocal);
 
     _cameraPosition = CameraPosition(
       target: LatLng(user.latitude, user.longitude),
@@ -193,7 +197,7 @@ abstract class HomeControllerBase with Store {
 
     if (_usuario != null) {
       final pathImageIcon = await _locationServiceImpl
-          .markerPositionIconCostomizer("destination1", 0.0,null);
+          .markerPositionIconCostomizer("destination1", 0.0, null);
       final myMarkerLocal = _locationServiceImpl.createLocationMarker(
           addres.latitude,
           addres.longitude,
@@ -226,21 +230,17 @@ abstract class HomeControllerBase with Store {
   Future<void> findTrips() async {
     _errorMessage = null;
     try {
-      final requisicoesSt =  _requisitionService.findAndObserverTrips();
-    _requestSubscription = requisicoesSt.listen(
-          (requisicaoList){
-             if(requisicaoList.isEmpty){
-             _requisicoes = [];
-              return;
-           }
-             _requisicoes.clear();
-             _requisicoes =  [...requisicaoList];
-          },
-        onError: (err){
-          _errorMessage =err;
+      final requisicoesSt = _requisitionService.findAndObserverTrips();
+      _requestSubscription = requisicoesSt.listen((requisicaoList) {
+        if (requisicaoList.isEmpty) {
+          _requisicoes = [];
+          return;
         }
-      );
-     
+        _requisicoes.clear();
+        _requisicoes = [...requisicaoList];
+      }, onError: (err) {
+        _errorMessage = err;
+      });
     } on RequestException catch (e, s) {
       _errorMessage = e.message;
       if (kDebugMode) {
@@ -270,32 +270,36 @@ abstract class HomeControllerBase with Store {
   @action
   Future<void> showLocationsOnMap() async {
     _errorMessage = null;
-  
+
     try {
       if (_requisicaoInfo == null) {
         return;
       }
 
-       final Usuario(latitude:passengerLatitude,longitude:passengerLogitude) = _requisicaoInfo!.passageiro;       
-   
-      final addressOrigem = Address.emptyAddres().copyWith(latitude: passengerLatitude,longitude: passengerLogitude);
+      final Usuario(latitude: passengerLatitude, longitude: passengerLogitude) =
+          _requisicaoInfo!.passageiro;
+
+      final addressOrigem = Address.emptyAddres()
+          .copyWith(latitude: passengerLatitude, longitude: passengerLogitude);
       final destino = _requisicaoInfo!.destino;
 
       await _traceRouter(addressOrigem, destino);
 
-       markerOne = await _createMarker(
+      markerOne = await _createMarker(
           addressOrigem.latitude,
           addressOrigem.longitude,
           '${UberDriveConstants.PATH_IMAGE}passageiro.png',
           'position1',
-          'passageiro',null);
+          'passageiro',
+          null);
 
-       markerTwo = await _createMarker(
+      markerTwo = await _createMarker(
           destino.latitude,
           destino.longitude,
           '${UberDriveConstants.PATH_IMAGE}destination2.png',
           'position2',
-          'destination',null);
+          'destination',
+          null);
       _markers.addAll([markerOne, markerTwo]);
 
       _mapsCameraService.moverCameraBound(
@@ -305,24 +309,24 @@ abstract class HomeControllerBase with Store {
     }
   }
 
-  Future<Marker> _createMarker(double latitude, double longitude,String pathImage,String idMarcador, String tiuloLocal,Size? sizeIcon) async {
-    final pathImageIconOne =
-        await _locationServiceImpl.markerPositionIconCostomizer(pathImage, 200,sizeIcon);
+  Future<Marker> _createMarker(
+      double latitude,
+      double longitude,
+      String pathImage,
+      String idMarcador,
+      String tiuloLocal,
+      Size? sizeIcon) async {
+    final pathImageIconOne = await _locationServiceImpl
+        .markerPositionIconCostomizer(pathImage, 200, sizeIcon);
 
-    return _locationServiceImpl.createLocationMarker(
-        latitude,
-        longitude,
-        pathImageIconOne,
-        idMarcador,
-        tiuloLocal,
-        BitmapDescriptor.hueBlue);
+    return _locationServiceImpl.createLocationMarker(latitude, longitude,
+        pathImageIconOne, idMarcador, tiuloLocal, BitmapDescriptor.hueBlue);
   }
 
   Future<void> _traceRouter(Address firstAddres, Address secondAdress) async {
     try {
-    
-      const apiKey =UberDriveConstants.MAPS_KEY ;
-      
+      const apiKey = UberDriveConstants.MAPS_KEY;
+
       _polynesRouter = <Polyline>{};
       if (_requisicaoInfo != null) {
         final polylinesData = await _tripService.getRoute(
@@ -343,49 +347,51 @@ abstract class HomeControllerBase with Store {
       throw AddresException(message: 'erro desconhecido', stackTrace: s);
     }
   }
-  Future<void> rejectTrip() async{
+
+  Future<void> rejectTrip() async {
     _polynesRouter = {};
     _markers.removeAll([markerOne, markerTwo]);
     _requisicaoInfo = null;
 
     await getPermissionLocation();
   }
+
   Future<void> acceptedTrip(Requisicao request) async {
     try {
-       _requisicaoInfo = null;
-       _requisicaoActive = null;
+      _requisicaoInfo = null;
+      _requisicaoActive = null;
 
       if (_usuario == null ||
           _usuario!.idUsuario == null ||
           _usuario!.idUsuario!.isEmpty) {
         _errorMessage = 'Dados do motorista inválidos';
-       throw RequestException(message: 'Dados do motorista inválidos');
+        throw RequestException(message: 'Dados do motorista inválidos');
       }
 
-       final updatedUsuario = _usuario!.copyWith(idRequisicaoAtiva: request.id);
-      
-       final isSuccess  = await _userService.updateUser(updatedUsuario);
-        if(!isSuccess) {
-           const message = 'Erro ao sincornizar dados,viagem não pode ser iniciada,tente novamente';
-          _errorMessage = message ;
-          throw RequestException(message: message);
-        }
+      final updatedUsuario =
+          _usuario!.copyWith(idRequisicaoAtiva: () => request.id);
 
-       final updateRequest = request.copyWith(
-             motorista: updatedUsuario, 
-             status: RequestState.a_caminho
-             );
-      
-     final requistionUpdated = await _requisitionService.updataDataRequisition(updateRequest);
+      final isSuccess = await _userService.updateUser(updatedUsuario);
+      if (!isSuccess) {
+        const message =
+            'Erro ao sincornizar dados,viagem não pode ser iniciada,tente novamente';
+        _errorMessage = message;
+        throw RequestException(message: message);
+      }
 
-     _requisicaoActive = requistionUpdated;
+      final updateRequest = request.copyWith(
+          motorista: updatedUsuario, status: RequestState.a_caminho);
 
+      final requistionUpdated =
+          await _requisitionService.updataDataRequisition(updateRequest);
+
+      _requisicaoActive = requistionUpdated;
     } on RequestException catch (e) {
       _errorMessage = e.message;
     }
   }
 
-  Future<void> dispose() async{
-      _requestSubscription?.cancel();
+  Future<void> dispose() async {
+    _requestSubscription?.cancel();
   }
 }

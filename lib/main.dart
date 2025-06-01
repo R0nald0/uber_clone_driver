@@ -1,4 +1,3 @@
-
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
@@ -11,13 +10,13 @@ import 'package:uber_clone_driver/app/module/trip_module/trip_module.dart';
 
 void main() async {
   await AppConfigInitialization().loadConfig();
- final token = await FirebaseNotfication().getTokenDevice();
+   
+  final token = await FirebaseNotfication().getTokenDevice();
   log("TOKEN $token");
-
+  
 
   runApp(UberCloneCoreConfig(
     title: "Uber Driver",
-  
     initialRoute: UberDriveConstants.SPLASH_SCREEN_PAGE_NAME,
     modules: [
       SplashScreenModule(),
