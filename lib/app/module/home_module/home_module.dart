@@ -25,6 +25,7 @@ class HomeModule extends FlutterGetItModule {
               bindings: [
                 Bind.lazySingleton(
                   (i) => HomeController(
+                    authService: i(),
                     locattionService: i(),
                     requisitionRepository: i(),
                     userRepository: i(),

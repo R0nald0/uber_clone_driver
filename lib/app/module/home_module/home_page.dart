@@ -8,6 +8,7 @@ import 'package:uber_clone_driver/app/helper/uber_drive_constants.dart';
 import 'package:uber_clone_driver/app/module/auth/controller/authentication_controller.dart';
 import 'package:uber_clone_driver/app/module/home_module/home_controller.dart';
 import 'package:uber_clone_driver/app/module/home_module/life_cycle/uber_drive_life_cycle.dart';
+import 'package:uber_clone_driver/app/module/home_module/widgets/loading_trips_widget.dart';
 
 part 'widgets/card_trip_item.dart';
 
@@ -29,26 +30,21 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with DialogLoader {
   var listReactions = <ReactionDisposer>[];
   final UberDriveLifeCycle lifeCycle = UberDriveLifeCycle(onResumed: () {});
-
   final CameraPosition _cameraPositionViagem =
       const CameraPosition(target: LatLng(-13.001478, -38.499390), zoom: 11);
-
   _onMapCreated(GoogleMapController googleMapController) {
     widget._homeController.controler.complete(googleMapController);
   }
 
   List<String> listItens = ["Configurações", "Deslogar"];
-  deslogarUsuario() async {
-    widget._auth.logout();
-  }
 
-  _escolhaItem(String escolha) {
+  _escolhaItem(String escolha) async {
     switch (escolha) {
       case "Configurações":
         Navigator.pushNamed(context, UberDriveConstants.PROFILE_PAGE_NAME);
         break;
       case "Deslogar":
-        deslogarUsuario();
+        await widget._homeController.logout();
         break;
     }
   }
@@ -60,7 +56,14 @@ class _HomePageState extends State<HomePage> with DialogLoader {
       await widget._homeController.getUserData(idUser);
       hideLoader();
     }
-    
+    final reactionUser =
+        reaction<bool>((_) => widget._homeController.userOn, (userOn) {
+      if (!userOn) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+            UberDriveConstants.LOGIN_PAGE_NAME, (_) => false);
+      }
+    });
+
     callMessager();
     final serviceEnableReaction = reaction<bool>(
         (_) => widget._homeController.isServiceEnable, (isServiceEnable) {
@@ -84,7 +87,7 @@ class _HomePageState extends State<HomePage> with DialogLoader {
 
     final requisiaoRection = autorun(
       (_) {
-        final  requestActive = widget._homeController.requisicaoActive;
+        final requestActive = widget._homeController.requisicaoActive;
         if (requestActive != null && requestActive.motorista != null) {
           Navigator.of(context).pushNamedAndRemoveUntil(
               UberDriveConstants.TRIP_PAGE_NAME,
@@ -108,7 +111,9 @@ class _HomePageState extends State<HomePage> with DialogLoader {
         },
       );
     });
+
     listReactions.addAll([
+      reactionUser,
       locationPermissionReaction,
       serviceEnableReaction,
       requisiaoRection,
@@ -215,9 +220,10 @@ class _HomePageState extends State<HomePage> with DialogLoader {
     final reactionDisposerMessage = reaction<String?>(
         (_) => widget._homeController.errorMessage, (messager) {
       if (messager != null) {
-         if(messager == UserNotFound.codeExcpetion.toString()){
-            Navigator.of(context).pushNamedAndRemoveUntil(UberDriveConstants.LOGIN_PAGE_NAME,(_)=> false)  ;    
-         }
+        if (messager == UserNotFound.codeExcpetion.toString()) {
+          Navigator.of(context).pushNamedAndRemoveUntil(
+              UberDriveConstants.LOGIN_PAGE_NAME, (_) => false);
+        }
         callSnackBar(messager);
       }
     });
@@ -246,10 +252,10 @@ class _HomePageState extends State<HomePage> with DialogLoader {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Motorista'), actions: [
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text('Motorista'), actions: [
         PopupMenuButton<String>(
             onSelected: _escolhaItem,
             itemBuilder: (context) => listItens.map((String item) {
@@ -268,13 +274,8 @@ class _HomePageState extends State<HomePage> with DialogLoader {
               child: Observer(builder: (context) {
                 final listRequistions = widget._homeController.requisicoes;
                 return listRequistions.isEmpty
-                    ? Center(
-                        child: Text(
-                          "Nenhuma Corrida ativa no momento,aguarde...",
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.labelLarge
-                              ?.copyWith(fontSize: 18,fontWeight: FontWeight.bold),
-                        ),
+                    ? const Center(
+                        child: LoadingTripsWidget(),
                       )
                     : ListView.builder(
                         itemCount: listRequistions.length,
@@ -296,18 +297,15 @@ class _HomePageState extends State<HomePage> with DialogLoader {
           Observer(builder: (context) {
             return Expanded(
                 flex: 1,
-                child: Material(
-                  borderOnForeground: true,
-                  elevation: 10.0,
-                  child: GoogleMap(
-                    initialCameraPosition:
-                        widget._homeController.cameraPosition ??
-                            _cameraPositionViagem,
-                    myLocationEnabled: true,
-                    markers: widget._homeController.markers,
-                    onMapCreated: _onMapCreated,
-                    polylines: widget._homeController.polynesRouter,
-                  ),
+                child: GoogleMap(
+                  
+                  initialCameraPosition:
+                      widget._homeController.cameraPosition ??
+                          _cameraPositionViagem,
+                  myLocationEnabled: true,
+                  markers: widget._homeController.markers,
+                  onMapCreated: _onMapCreated,
+                  polylines: widget._homeController.polynesRouter,
                 ));
           })
         ],
@@ -317,19 +315,31 @@ class _HomePageState extends State<HomePage> with DialogLoader {
 
   Future bottomShetUber(BuildContext context) {
     return showModalBottomSheet(
-      isDismissible: false,
+      shape: const ContinuousRectangleBorder(
+          borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(80),
+        topRight: Radius.circular(80),
+      )),
       context: context,
       builder: (context) {
         return Observer(builder: (context) {
-          return Expanded(
-              flex: 1,
-              child: GoogleMap(
-                initialCameraPosition: widget._homeController.cameraPosition ??
-                    _cameraPositionViagem,
-                myLocationEnabled: true,
-                markers: widget._homeController.markers,
-                onMapCreated: _onMapCreated,
-              ));
+          return Container(
+            padding: const EdgeInsets.only(top: 50),
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(30),
+                topRight: Radius.circular(30),
+              ),
+            ),
+            child: GoogleMap(
+              layoutDirection: TextDirection.ltr,
+              initialCameraPosition: widget._homeController.cameraPosition ??
+                  _cameraPositionViagem,
+              myLocationEnabled: true,
+              markers: widget._homeController.markers,
+              onMapCreated: _onMapCreated,
+            ),
+          );
         });
       },
     );

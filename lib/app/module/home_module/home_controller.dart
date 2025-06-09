@@ -20,25 +20,29 @@ abstract class HomeControllerBase with Store {
   final MapsCameraService _mapsCameraService;
   final ITripSerivce _tripService;
   final IAppUberLog _log;
+  final IAuthService _authSerivce;
+
   final Completer<GoogleMapController> controler = Completer();
   StreamSubscription<List<Requisicao>>? _requestSubscription;
 
   late Marker markerOne;
   late Marker markerTwo;
 
-  HomeControllerBase(
-      {required ILocationService locattionService,
-      required IRequistionService requisitionRepository,
-      required IUserService userRepository,
-      required MapsCameraService mapsCameraService,
-      required ITripSerivce tripService,
-      required IAppUberLog log})
-      : _requisitionService = requisitionRepository,
+  HomeControllerBase({
+    required ILocationService locattionService,
+    required IRequistionService requisitionRepository,
+    required IUserService userRepository,
+    required MapsCameraService mapsCameraService,
+    required ITripSerivce tripService,
+    required IAppUberLog log,
+    required IAuthService authService,
+  })  : _requisitionService = requisitionRepository,
         _locationServiceImpl = locattionService,
         _userService = userRepository,
         _mapsCameraService = mapsCameraService,
         _tripService = tripService,
-        _log = log;
+        _log = log,
+        _authSerivce = authService;
 
   @readonly
   var _requisicoes = <Requisicao>[];
@@ -73,6 +77,9 @@ abstract class HomeControllerBase with Store {
   @readonly
   var _polynesRouter = <Polyline>{};
 
+  @readonly
+  bool _userOn = true;
+
   @action
   Future<void> findRequisitionActive() async {
     try {
@@ -94,8 +101,8 @@ abstract class HomeControllerBase with Store {
       _requisicaoActive = activetedRequisition;
     } on UserNotFound catch (e) {
       _errorMessage = null;
-      _errorMessage = UserNotFound.codeExcpetion.toString();    
-    } 
+      _errorMessage = UserNotFound.codeExcpetion.toString();
+    }
   }
 
   @action
@@ -217,7 +224,9 @@ abstract class HomeControllerBase with Store {
       final user = await _userService.getDataUserOn(idUser);
       if (user == null) {
         _errorMessage = "erro ao recuperar dados do usuario";
+        _userOn = false;
       }
+      _userOn = true;
       _usuario = user;
       await findRequisitionActive();
       await getPermissionLocation();
@@ -387,6 +396,19 @@ abstract class HomeControllerBase with Store {
 
       _requisicaoActive = requistionUpdated;
     } on RequestException catch (e) {
+      _errorMessage = e.message;
+    }
+  }
+
+  Future<void> logout() async {
+    try {
+      final isLogout = await _authSerivce.logout();
+      if (isLogout) {
+        _userOn = false;
+        _usuario = null;
+      }
+    } on UserException catch (e) {
+      _errorMessage = null;
       _errorMessage = e.message;
     }
   }

@@ -21,7 +21,6 @@ class TripModule extends FlutterGetItModule{
                       Bind.lazySingleton((i) => TripController(
                         locattionService: i(),
                           requisitionService: i(),
-                          userService: i(),
                           mapsCameraService: i(),
                           tripService: i(),
                           log: i(),

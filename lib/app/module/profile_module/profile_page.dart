@@ -172,7 +172,7 @@ class _ProfilePageState extends State<ProfilePage> with DialogLoader{
                   (context, index) {
                        final Requisicao(:destino,:valorCorrida,:requestDate) = widget.profileController.requests![index];
                     return  CardTrips(
-                      tripNameLocal: destino.cidade,
+                      tripNameLocal: destino.bairro,
                       date: requestDate.uberFormatDate('pt_BR'),
                       price: valorCorrida
                      );

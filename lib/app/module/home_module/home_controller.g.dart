@@ -207,6 +207,24 @@ mixin _$HomeController on HomeControllerBase, Store {
     });
   }
 
+  late final _$_userOnAtom =
+      Atom(name: 'HomeControllerBase._userOn', context: context);
+
+  bool get userOn {
+    _$_userOnAtom.reportRead();
+    return super._userOn;
+  }
+
+  @override
+  bool get _userOn => userOn;
+
+  @override
+  set _userOn(bool value) {
+    _$_userOnAtom.reportWrite(value, super._userOn, () {
+      super._userOn = value;
+    });
+  }
+
   late final _$findRequisitionActiveAsyncAction =
       AsyncAction('HomeControllerBase.findRequisitionActive', context: context);
 

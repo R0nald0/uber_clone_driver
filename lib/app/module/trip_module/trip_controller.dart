@@ -16,7 +16,6 @@ class TripController = TripControllerBase with _$TripController;
 abstract class TripControllerBase with Store {
   final ILocationService _locationServiceImpl;
   final IRequistionService _requisitionService;
-  final IUserService _userService;
   final MapsCameraService _mapsCameraService;
   final ITripSerivce _tripService;
   final IAppUberLog _log;
@@ -28,7 +27,6 @@ abstract class TripControllerBase with Store {
   TripControllerBase(
       {required ILocationService locattionService,
       required IRequistionService requisitionService,
-      required IUserService userService,
       required MapsCameraService mapsCameraService,
       required ITripSerivce tripService,
       required IAppUberLog log,
@@ -37,7 +35,7 @@ abstract class TripControllerBase with Store {
       req})
       : _requisitionService = requisitionService,
         _locationServiceImpl = locattionService,
-        _userService = userService,
+        
         _mapsCameraService = mapsCameraService,
         _tripService = tripService,
         _log = log,
