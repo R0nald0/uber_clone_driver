@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:uber_clone_driver/app/helper/extensions.dart';
 
 class CardBalanceWidget extends StatelessWidget {
-  final double balance; 
+  final double balance;
+  final VoidCallback addMoney;
   final ValueNotifier<bool> _isExpandedBalanceCard = ValueNotifier(true);
   final ValueNotifier<bool> _showContentVN = ValueNotifier(true);
-   
 
-  CardBalanceWidget({super.key, required this.balance});
+  CardBalanceWidget({super.key, required this.balance,required this.addMoney});
 
-  String  money() => balance == 0 ? balance.toStringAsFixed(2) :balance.toFixed();
+  String money() =>
+      balance == 0 ? balance.toStringAsFixed(2) : balance.toFixed();
   @override
   Widget build(BuildContext context) {
-
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -21,10 +21,11 @@ class CardBalanceWidget extends StatelessWidget {
             builder: (_, isExpandedBalanceCardVN, __) {
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 500),
-                height: isExpandedBalanceCardVN ? context.heightPercent(0.19) : 80,
+                height:
+                    isExpandedBalanceCardVN ? context.heightPercent(0.23) : 80,
                 curve: Curves.decelerate,
                 onEnd: () async {
-                   if (isExpandedBalanceCardVN) {
+                  if (isExpandedBalanceCardVN) {
                     _showContentVN.value = true;
                   }
                 },
@@ -48,7 +49,7 @@ class CardBalanceWidget extends StatelessWidget {
                                   color: Colors.white),
                             ),
                             IconButton(
-                              onPressed: ()async {
+                              onPressed: () async {
                                 _showContentVN.value = false;
                                 _isExpandedBalanceCard.value =
                                     !isExpandedBalanceCardVN;
@@ -61,30 +62,42 @@ class CardBalanceWidget extends StatelessWidget {
                           ],
                         ),
                         ValueListenableBuilder(
-                            valueListenable: _showContentVN,
-                            builder: (__, value, _) {
-                              return AnimatedAlign(
-                                alignment: value ? Alignment.centerLeft : Alignment.centerRight,
-                                widthFactor: 100,
-                                curve: Curves.elasticOut,
-                                duration: const Duration(seconds: 2),
-                                child:Offstage(
-                                  offstage: !value,
-                                  child: Text(
-                                    "R\$ ${money()}",
-                                    style: context
-                                        .textTheme()
-                                        .displaySmall
-                                        ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white),
-                                  ),
-                                  
-                                ) ,
-                                
-                                 
-                              );
-                            })
+                          valueListenable: _showContentVN,
+                          builder: (__, value, _) {
+                            return AnimatedOpacity(
+                              opacity:!value ?0:1,
+                              curve: Curves.elasticOut,
+                              duration: const Duration(seconds: 2),
+                              child: Offstage(
+                                offstage: !value,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "R\$ ${money()}",
+                                      style: context
+                                          .textTheme()
+                                          .displaySmall
+                                          ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white),
+                                    ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        TextButton(
+                                            onPressed: addMoney,
+                                            child: const Text(
+                                                'Adicionar Dinheiro'))
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),

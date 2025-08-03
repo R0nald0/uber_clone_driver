@@ -27,6 +27,24 @@ mixin _$ProfileController on ProfileControllerBase, Store {
     });
   }
 
+  late final _$_loadingAtom =
+      Atom(name: 'ProfileControllerBase._loading', context: context);
+
+  bool get loading {
+    _$_loadingAtom.reportRead();
+    return super._loading;
+  }
+
+  @override
+  bool get _loading => loading;
+
+  @override
+  set _loading(bool value) {
+    _$_loadingAtom.reportWrite(value, super._loading, () {
+      super._loading = value;
+    });
+  }
+
   late final _$_errorMessageAtom =
       Atom(name: 'ProfileControllerBase._errorMessage', context: context);
 
@@ -61,6 +79,24 @@ mixin _$ProfileController on ProfileControllerBase, Store {
     _$_requestsAtom.reportWrite(value, super._requests, () {
       super._requests = value;
     });
+  }
+
+  late final _$findDataAsyncAction =
+      AsyncAction('ProfileControllerBase.findData', context: context);
+
+  @override
+  Future<void> findData() {
+    return _$findDataAsyncAction.run(() => super.findData());
+  }
+
+  late final _$createIntentPaymentAsyncAction = AsyncAction(
+      'ProfileControllerBase.createIntentPayment',
+      context: context);
+
+  @override
+  Future<void> createIntentPayment(double amount) {
+    return _$createIntentPaymentAsyncAction
+        .run(() => super.createIntentPayment(amount));
   }
 
   @override

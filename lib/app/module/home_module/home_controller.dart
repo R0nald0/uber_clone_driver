@@ -175,14 +175,15 @@ abstract class HomeControllerBase with Store {
         desiredAccuracy: LocationAccuracy.high);
     final user = _usuario!.copyWith(
         latitude: actualPosition.latitude, longitude: actualPosition.longitude);
+        const carIcon = "${UberDriveConstants.PATH_IMAGE}carMarker.png";
 
     final myMarkerLocal = await _createMarker(
         user.latitude,
         user.longitude,
-        '${UberDriveConstants.PATH_IMAGE}carro.png',
+         carIcon,
         "my_local",
         'meu local',
-        const Size(45, 45));
+        const Size(30, 20));
 
     _markers.add(myMarkerLocal);
 
@@ -213,7 +214,6 @@ abstract class HomeControllerBase with Store {
           'meu local',
           10);
       _markers.add(myMarkerLocal);
-      //  showAllPositionsAndTraceRouter();
     }
   }
 
@@ -335,8 +335,8 @@ abstract class HomeControllerBase with Store {
   Future<void> _traceRouter(Address firstAddres, Address secondAdress) async {
     try {
       const apiKey = UberDriveConstants.MAPS_KEY;
-
       _polynesRouter = <Polyline>{};
+
       if (_requisicaoInfo != null) {
         final polylinesData = await _tripService.getRoute(
             firstAddres, secondAdress, Colors.black, 5, apiKey);

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uber_clone_core/uber_clone_core.dart';
-import 'package:uber_clone_driver/app/helper/extensions.dart';
+
     
 class CardTrips extends StatelessWidget {
     final String tripNameLocal; 

@@ -302,7 +302,7 @@ class _HomePageState extends State<HomePage> with DialogLoader {
                   initialCameraPosition:
                       widget._homeController.cameraPosition ??
                           _cameraPositionViagem,
-                  myLocationEnabled: true,
+                  myLocationEnabled: false,
                   markers: widget._homeController.markers,
                   onMapCreated: _onMapCreated,
                   polylines: widget._homeController.polynesRouter,

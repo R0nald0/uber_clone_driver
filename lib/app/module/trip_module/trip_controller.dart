@@ -362,7 +362,7 @@ abstract class TripControllerBase with Store {
     _errorMessage = null;
     try {
 
-      final isPayment = await _finishiPayment(_requisicaoActive!);
+      final isPayment = await _finishPayment(_requisicaoActive!);
       
       if(!isPayment){
           return;
@@ -407,19 +407,23 @@ abstract class TripControllerBase with Store {
     }
   }
 
-  Future<bool> _finishiPayment(Requisicao updateRequest) async {
+  Future<bool> _finishPayment(Requisicao updateRequest) async {
     try {
       if (updateRequest.motorista == null || updateRequest.passageiro.idUsuario == null) {
          return false;
       }  
 
-      final data = (
+     if (updateRequest.paymentType.type == TypesPayment.CREDIT_CARD.name) { 
+       //TODO Fazer Verificação sobre pagamento realazida com successo
+       return true; 
+      }
+
+     final data = (
         paymentType: updateRequest.paymentType,
         recipientId: updateRequest.motorista!.idUsuario!,
         senderId: updateRequest.passageiro.idUsuario!,
         value:updateRequest.valorCorrida
       );
-     
      return await _paymentService.startPaymentTrip(data);
     } on UserNotFound {
       _showErrorMessage(UserNotFound.codeExcpetion.toString());
